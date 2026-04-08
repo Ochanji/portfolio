@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<!--
+  admin/project_form.html — add or edit a project card.
+  Used by both admin_add_project (project=None, idx=None)
+  and admin_edit_project (project=<dict>, idx=<int>).
+-->
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  {# Page title changes based on whether we're adding or editing #}
+  <title>{{ "Edit" if project else "Add" }} Project — Admin</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        crossorigin="anonymous">
+
+  <style>
+    /* ── Admin form page layout ───────────────────────────────────────────── */
+    .admin-bar {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 0;
+    }
+    .admin-bar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .admin-bar-title {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--text-primary);
+    }
+    .admin-bar-title span { color: var(--accent); }
+
+    .admin-link {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+    .admin-link:hover { color: var(--accent); }
+
+    /* Form card */
+    .form-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 2rem;
+      max-width: 680px;
+      margin: 2.5rem auto;
+    }
+
+    .form-card-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1.75rem;
+    }
+
+    /* Hint text below inputs */
+    .field-hint {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+    }
+
+    /* Button row */
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .btn-cancel {
+      background: transparent;
+      border: 1px solid var(--border-hover);
+      color: var(--text-secondary);
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 1rem;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-cancel:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Top bar -->
+  <header class="admin-bar">
+    <div class="container admin-bar-inner">
+      <span class="admin-bar-title"><span>VO</span> Admin</span>
+      <a href="{{ url_for('admin_dashboard') }}" class="admin-link">
+        &larr; Back to Dashboard
+      </a>
+    </div>
+  </header>
+
+  <!-- Form card -->
+  <div class="container">
+    <div class="form-card">
+
+      <h1 class="form-card-title">
+        {{ "Edit Project" if project else "Add New Project" }}
+      </h1>
+
+      {#
+        POST action differs for add vs edit.
+        When idx is None (add mode), post to admin_add_project.
+        When idx is set (edit mode), post to admin_edit_project with the index.
+      #}
+      <form method="POST"
+            action="{{ url_for('admin_edit_project', idx=idx) if idx is not none
+                       else url_for('admin_add_project') }}">
+
+        {# Project title #}
+        <div class="form-group">
+          <label for="title">Title</label>
+          <input type="text" id="title" name="title" required
+                 placeholder="e.g. Automated ETL Pipeline"
+                 value="{{ project.title if project else '' }}">
+        </div>
+
+        {# Description — shown on the public project card #}
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea id="description" name="description" rows="4" required
+                    placeholder="2–3 sentences describing the project and its impact…">{{ project.description if project else '' }}</textarea>
+        </div>
+
+        {# Tags — comma-separated; split into a list on the Flask side #}
+        <div class="form-group">
+          <label for="tags">Technology Tags</label>
+          <input type="text" id="tags" name="tags"
+                 placeholder="Python, PostgreSQL, Power BI"
+                 value="{{ project.tags | join(', ') if project else '' }}">
+          <p class="field-hint">Comma-separated — e.g. Python, Docker, SQL</p>
+        </div>
+
+        {# GitHub repository URL #}
+        <div class="form-group">
+          <label for="github">GitHub URL</label>
+          <input type="text" id="github" name="github"
+                 placeholder="https://github.com/you/repo  (or # for placeholder)"
+                 value="{{ project.github if project else '#' }}">
+        </div>
+
+        {# Live demo URL #}
+        <div class="form-group">
+          <label for="demo">Live Demo URL</label>
+          <input type="text" id="demo" name="demo"
+                 placeholder="https://your-demo.com  (or # for placeholder)"
+                 value="{{ project.demo if project else '#' }}">
+        </div>
+
+        <!-- Save and cancel buttons -->
+        <div class="form-actions">
+          <button type="submit" class="submit-button" style="flex:1;">
+            {{ "Save Changes" if project else "Add Project" }}
+          </button>
+          <a href="{{ url_for('admin_dashboard') }}" class="btn-cancel">
+            Cancel
+          </a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</body>
+</html>

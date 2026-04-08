@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+{#
+  base.html — shell inherited by every page.
+  Contains: head, navbar, content block, footer, admin bar, modals, scripts.
+#}
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>{{ profile.get('name', 'Portfolio') }} — {{ profile.get('title', '') }}</title>
+  <meta name="description"
+        content="Data Engineer and Digital Systems Specialist with 10+ years building ETL pipelines, BI dashboards, and production infrastructure.">
+  <meta name="author" content="{{ profile.get('name', '') }}">
+
+  <meta property="og:title"       content="{{ profile.get('name', '') }} — {{ profile.get('title', '') }}">
+  <meta property="og:description" content="Engineering data systems from pipeline to insight.">
+  <meta property="og:type"        content="website">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+</head>
+
+<body{% if session.admin_logged_in %} class="admin-active"{% endif %}>
+
+  <!-- ── Navigation ─────────────────────────────────────────────────────────── -->
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container nav-container">
+
+      <a href="/#hero" class="nav-brand" aria-label="{{ profile.get('name', 'Home') }}">VO</a>
+
+      <ul class="nav-links" id="nav-links" role="list">
+        <li><a href="/#hero">Home</a></li>
+        <li><a href="/#about">About</a></li>
+        <li><a href="/#skills">Skills</a></li>
+        <li><a href="/#projects">Projects</a></li>
+        <li><a href="/#experience">Experience</a></li>
+        <li><a href="/#contact">Contact</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
+          <i class="fas fa-sun"  id="icon-sun"  aria-hidden="true"></i>
+          <i class="fas fa-moon" id="icon-moon" aria-hidden="true" style="display:none"></i>
+        </button>
+        <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- ── Page content ───────────────────────────────────────────────────────── -->
+  <main id="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ── Footer ─────────────────────────────────────────────────────────────── -->
+  <footer class="footer" role="contentinfo">
+
+    {% if session.admin_logged_in %}
+    <div class="section-admin-bar footer-edit-bar">
+      <button class="section-edit-btn" onclick="AdminPanel.openEditSection('footer')">
+        <i class="fas fa-pencil-alt"></i> Edit Footer
+      </button>
+    </div>
+    {% endif %}
+
+    <div class="container footer-inner">
+
+      <div class="footer-brand">
+        <span class="footer-name">{{ profile.get('name', '') }}</span>
+        <span class="footer-title">{{ profile.get('title', '') }}</span>
+      </div>
+
+      {% set fc = profile.get('contact', {}) %}
+      <div class="footer-social" aria-label="Social links">
+        <a href="{{ fc.get('linkedin', '#') }}" target="_blank" rel="noopener noreferrer"
+           class="social-link" aria-label="LinkedIn">
+          <i class="fab fa-linkedin" aria-hidden="true"></i>
+        </a>
+        <a href="{{ fc.get('github', '#') }}" target="_blank" rel="noopener noreferrer"
+           class="social-link" aria-label="GitHub">
+          <i class="fab fa-github" aria-hidden="true"></i>
+        </a>
+        <a href="mailto:{{ fc.get('email', '') }}" class="social-link" aria-label="Email">
+          <i class="fas fa-envelope" aria-hidden="true"></i>
+        </a>
+      </div>
+
+      <p class="footer-copy">
+        &copy; <span id="footer-year"></span> {{ profile.get('name', '') }}. All rights reserved.
+      </p>
+
+    </div>
+  </footer>
+
+  <!-- ── Admin login trigger (only when NOT logged in) ──────────────────────── -->
+  {% if not session.admin_logged_in %}
+  <button class="admin-trigger" onclick="AdminPanel.openLoginModal()"
+          aria-label="Admin login" title="Admin login">
+    <i class="fas fa-lock"></i>
+  </button>
+  {% endif %}
+
+  <!-- ── Admin login modal ──────────────────────────────────────────────────── -->
+  <div id="admin-login-modal" class="admin-modal" role="dialog" aria-modal="true" aria-label="Admin login">
+    <div class="admin-modal-backdrop" onclick="AdminPanel.closeLoginModal()"></div>
+    <div class="admin-modal-box admin-login-box">
+      <div class="admin-modal-header">
+        <h2>Admin Login</h2>
+        <button class="admin-modal-close" onclick="AdminPanel.closeLoginModal()" aria-label="Close">×</button>
+      </div>
+      <div class="admin-modal-body">
+        <div class="form-group">
+          <label for="admin-username">Username</label>
+          <input type="text" id="admin-username" autocomplete="username" placeholder="Username">
+        </div>
+        <div class="form-group">
+          <label for="admin-password">Password</label>
+          <input type="password" id="admin-password" autocomplete="current-password" placeholder="Password">
+        </div>
+        <p id="admin-login-error" class="modal-error"></p>
+      </div>
+      <div class="admin-modal-footer">
+        <div class="admin-modal-footer-btns">
+          <button class="admin-btn" onclick="AdminPanel.closeLoginModal()">Cancel</button>
+          <button class="admin-btn admin-btn-primary" id="admin-login-btn" onclick="AdminPanel.login()">
+            Login
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Admin bar (only when logged in) ────────────────────────────────────── -->
+  {% if session.admin_logged_in %}
+  <div id="admin-bar" class="admin-bar" role="toolbar" aria-label="Admin toolbar">
+    <div class="admin-bar-inner">
+
+      <span class="admin-bar-brand">
+        <i class="fas fa-bolt"></i> Admin
+      </span>
+
+      <div class="admin-bar-actions">
+        <label class="edit-mode-label" for="edit-mode-checkbox">
+          <span>Edit Mode</span>
+          <div class="toggle-switch">
+            <input type="checkbox" id="edit-mode-checkbox"
+                   onchange="AdminPanel.toggleEditMode(this.checked)">
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </div>
+        </label>
+
+        <button class="admin-btn" onclick="AdminPanel.openAddProject()">
+          <i class="fas fa-plus"></i> Project
+        </button>
+        <button class="admin-btn" onclick="AdminPanel.openAddExperience()">
+          <i class="fas fa-plus"></i> Experience
+        </button>
+        <button class="admin-btn admin-btn-danger" onclick="AdminPanel.logout()">
+          <i class="fas fa-sign-out-alt"></i> Log Out
+        </button>
+      </div>
+
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── Shared edit / add modal ────────────────────────────────────────────── -->
+  <div id="admin-modal" class="admin-modal" role="dialog" aria-modal="true">
+    <div class="admin-modal-backdrop" onclick="AdminPanel.closeModal()"></div>
+    <div class="admin-modal-box">
+      <div class="admin-modal-header">
+        <h2 id="admin-modal-title">Edit</h2>
+        <button class="admin-modal-close" onclick="AdminPanel.closeModal()" aria-label="Close">×</button>
+      </div>
+      <div class="admin-modal-body" id="admin-modal-body"></div>
+      <div class="admin-modal-footer">
+        <p id="modal-error" class="modal-error"></p>
+        <div class="admin-modal-footer-btns">
+          <button class="admin-btn" onclick="AdminPanel.closeModal()">Cancel</button>
+          <button class="admin-btn admin-btn-primary" id="modal-save-btn">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Scripts ────────────────────────────────────────────────────────────── -->
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+
+</body>
+</html>

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="projects-page" aria-label="All projects">
+  <div class="container">
+
+    <div class="projects-page-header">
+      <a href="/" class="projects-back-link">
+        <i class="fas fa-arrow-left"></i> Back to Portfolio
+      </a>
+      <h1 class="section-title">All Projects</h1>
+      <p class="section-subtitle">Outcome-driven work — every engagement measured by what changed.</p>
+    </div>
+
+    <div class="projects-grid">
+      {% for project in projects %}
+      <article class="case-study-card" data-idx="{{ loop.index0 }}">
+
+        {% if session.admin_logged_in %}
+        <div class="card-admin-controls" style="position:absolute;top:12px;right:12px;z-index:10;">
+          <button class="admin-btn admin-btn-small"
+                  onclick="AdminPanel.openEditProject({{ loop.index0 }})">
+            <i class="fas fa-pencil-alt"></i> Edit
+          </button>
+          <button class="admin-btn admin-btn-small admin-btn-danger"
+                  onclick="AdminPanel.deleteProject({{ loop.index0 }})">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        {% endif %}
+
+        <div class="cs-header">
+          {% if project.image %}
+          <img src="{{ project.image }}" alt="{{ project.title }}" class="cs-header-img">
+          <div class="cs-header-overlay"></div>
+          {% endif %}
+          <p class="cs-tagline">{{ project.tagline }}</p>
+        </div>
+
+        {% if project.metrics %}
+        <div class="cs-metrics">
+          {% for m in project.metrics %}
+          <div class="cs-metric">
+            <span class="cs-metric-value">{{ m.value }}</span>
+            <span class="cs-metric-label">{{ m.label }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="cs-body">
+          <h3 class="cs-title">{{ project.title }}</h3>
+
+          <div class="cs-psi">
+            <div class="cs-psi-item">
+              <span class="cs-psi-label cs-psi-problem">Problem</span>
+              <p class="cs-psi-text">{{ project.problem }}</p>
+            </div>
+            <div class="cs-psi-item">
+              <span class="cs-psi-label cs-psi-solution">Solution</span>
+              <p class="cs-psi-text">{{ project.solution }}</p>
+            </div>
+            <div class="cs-psi-item">
+              <span class="cs-psi-label cs-psi-impact">Impact</span>
+              <p class="cs-psi-text">{{ project.impact }}</p>
+            </div>
+          </div>
+
+          <div class="project-tags">
+            {% for tag in project.tags %}
+            <span class="tag">{{ tag }}</span>
+            {% endfor %}
+          </div>
+
+          <div class="project-links">
+            <a href="{{ project.github }}" class="project-link"
+               target="_blank" rel="noopener noreferrer">
+              <i class="fab fa-github" aria-hidden="true"></i> GitHub
+            </a>
+            <a href="{{ project.demo }}" class="project-link demo"
+               target="_blank" rel="noopener noreferrer">
+              <i class="fas fa-external-link-alt" aria-hidden="true"></i> Live Demo
+            </a>
+          </div>
+        </div>
+
+      </article>
+      {% else %}
+      <p class="projects-empty">No projects yet — add one via the admin bar.</p>
+      {% endfor %}
+    </div>
+
+    {% if session.admin_logged_in %}
+    <div class="projects-footer">
+      <button class="cta-button" onclick="AdminPanel.openAddProject()">
+        <i class="fas fa-plus"></i> Add Project
+      </button>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<!--
+  admin/dashboard.html — content management dashboard
+  Shows all projects and experience entries with Add / Edit / Delete controls.
+  No JavaScript required — all actions use plain HTML forms.
+-->
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — Vincent Ochanji Portfolio</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        crossorigin="anonymous">
+
+  <style>
+    /* ── Admin shell layout ───────────────────────────────────────────────── */
+
+    /* Top bar replaces the public navbar */
+    .admin-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 0;
+    }
+
+    .admin-bar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .admin-bar-title {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--text-primary);
+    }
+
+    .admin-bar-title span {
+      color: var(--accent);
+    }
+
+    /* Logout / back links */
+    .admin-bar-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .admin-link {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .admin-link:hover { color: var(--accent); }
+
+    /* Main wrapper */
+    .admin-main {
+      padding: 2.5rem 0 4rem;
+    }
+
+    /* Section heading row: title + "Add" button on the right */
+    .admin-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      gap: 1rem;
+    }
+
+    .admin-section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* Divider between sections */
+    .admin-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 3rem 0;
+    }
+
+    /* Item card (project or experience entry) */
+    .admin-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .admin-item-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .admin-item-title {
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+    }
+
+    .admin-item-sub {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .admin-item-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    /* Action buttons column */
+    .admin-item-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    /* Small button variants */
+    .btn-edit, .btn-delete, .btn-add {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.45rem 0.9rem;
+      border-radius: 0.4rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      border: none;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .btn-edit:hover, .btn-delete:hover, .btn-add:hover {
+      opacity: 0.85;
+      transform: translateY(-1px);
+    }
+
+    /* Edit — blue outline */
+    .btn-edit {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+    }
+
+    /* Delete — red fill */
+    .btn-delete {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #f87171;
+      width: 100%;
+      justify-content: center;
+    }
+
+    /* Add new — accent fill */
+    .btn-add {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    /* Empty state message */
+    .admin-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 1rem 0;
+    }
+
+    /* ── Responsive ───────────────────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .admin-item {
+        flex-direction: column;
+      }
+      .admin-item-actions {
+        flex-direction: row;
+        width: 100%;
+      }
+      .btn-delete { width: auto; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ── Admin top bar ──────────────────────────────────────────────────────── -->
+  <header class="admin-bar">
+    <div class="container admin-bar-inner">
+      <span class="admin-bar-title">
+        <span>VO</span> Admin Dashboard
+      </span>
+      <div class="admin-bar-actions">
+        <a href="{{ url_for('home') }}" class="admin-link">
+          <i class="fas fa-eye" aria-hidden="true"></i> View Site
+        </a>
+        <a href="{{ url_for('admin_logout') }}" class="admin-link">
+          <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Logout
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Main content ──────────────────────────────────────────────────────── -->
+  <main class="admin-main">
+    <div class="container">
+
+      <!-- ── Projects section ──────────────────────────────────────────────── -->
+      <div class="admin-section-header">
+        <h2 class="admin-section-title">Projects</h2>
+        <a href="{{ url_for('admin_add_project') }}" class="btn-add">
+          <i class="fas fa-plus" aria-hidden="true"></i> Add Project
+        </a>
+      </div>
+
+      {% if projects %}
+        {% for project in projects %}
+        {# Each project card shows title, description snippet, tags, and actions #}
+        <div class="admin-item">
+
+          <div class="admin-item-body">
+            <p class="admin-item-title">{{ project.title }}</p>
+            {# Truncate long descriptions with CSS — full text is in the JSON #}
+            <p class="admin-item-sub"
+               style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:520px;">
+              {{ project.description }}
+            </p>
+            <div class="admin-item-tags">
+              {% for tag in project.tags %}
+              <span class="tag">{{ tag }}</span>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="admin-item-actions">
+            {# Edit button — navigates to the pre-filled edit form #}
+            <a href="{{ url_for('admin_edit_project', idx=loop.index0) }}"
+               class="btn-edit">
+              <i class="fas fa-pen" aria-hidden="true"></i> Edit
+            </a>
+
+            {# Delete button — plain form so no JS is needed #}
+            <form method="POST"
+                  action="{{ url_for('admin_delete_project', idx=loop.index0) }}"
+                  onsubmit="return confirm('Delete «{{ project.title }}»?');">
+              <button type="submit" class="btn-delete">
+                <i class="fas fa-trash" aria-hidden="true"></i> Delete
+              </button>
+            </form>
+          </div>
+
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="admin-empty">No projects yet — add your first one above.</p>
+      {% endif %}
+
+      <hr class="admin-divider">
+
+      <!-- ── Experience section ────────────────────────────────────────────── -->
+      <div class="admin-section-header">
+        <h2 class="admin-section-title">Experience</h2>
+        <a href="{{ url_for('admin_add_experience') }}" class="btn-add">
+          <i class="fas fa-plus" aria-hidden="true"></i> Add Entry
+        </a>
+      </div>
+
+      {% if experience %}
+        {% for job in experience %}
+        <div class="admin-item">
+
+          <div class="admin-item-body">
+            <p class="admin-item-title">{{ job.title }}</p>
+            <p class="admin-item-sub">{{ job.organization }} &bull; {{ job.period }}</p>
+            {# Show only the first highlight as a preview #}
+            {% if job.highlights %}
+            <p class="admin-item-sub" style="font-style:italic;">
+              {{ job.highlights[0] }}
+              {% if job.highlights|length > 1 %}
+              <span style="color:var(--accent)"> +{{ job.highlights|length - 1 }} more</span>
+              {% endif %}
+            </p>
+            {% endif %}
+          </div>
+
+          <div class="admin-item-actions">
+            <a href="{{ url_for('admin_edit_experience', idx=loop.index0) }}"
+               class="btn-edit">
+              <i class="fas fa-pen" aria-hidden="true"></i> Edit
+            </a>
+
+            <form method="POST"
+                  action="{{ url_for('admin_delete_experience', idx=loop.index0) }}"
+                  onsubmit="return confirm('Delete «{{ job.title }}»?');">
+              <button type="submit" class="btn-delete">
+                <i class="fas fa-trash" aria-hidden="true"></i> Delete
+              </button>
+            </form>
+          </div>
+
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="admin-empty">No experience entries yet — add your first one above.</p>
+      {% endif %}
+
+    </div>
+  </main>
+
+</body>
+</html>

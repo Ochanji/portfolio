@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<!--
+  admin/experience_form.html — add or edit an experience timeline entry.
+  Used by admin_add_experience (job=None, idx=None)
+  and admin_edit_experience (job=<dict>, idx=<int>).
+-->
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ "Edit" if job else "Add" }} Experience — Admin</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        crossorigin="anonymous">
+
+  <style>
+    /* ── Same admin shell styles as project_form.html ─────────────────────── */
+    .admin-bar {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 0;
+    }
+    .admin-bar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .admin-bar-title { font-weight: 700; font-size: 1.1rem; color: var(--text-primary); }
+    .admin-bar-title span { color: var(--accent); }
+    .admin-link { font-size: 0.875rem; color: var(--text-muted); text-decoration: none; }
+    .admin-link:hover { color: var(--accent); }
+
+    .form-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 2rem;
+      max-width: 680px;
+      margin: 2.5rem auto;
+    }
+    .form-card-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1.75rem;
+    }
+    .field-hint {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+    }
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .btn-cancel {
+      background: transparent;
+      border: 1px solid var(--border-hover);
+      color: var(--text-secondary);
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 1rem;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-cancel:hover { border-color: var(--accent); color: var(--accent); }
+  </style>
+</head>
+
+<body>
+
+  <!-- Top bar -->
+  <header class="admin-bar">
+    <div class="container admin-bar-inner">
+      <span class="admin-bar-title"><span>VO</span> Admin</span>
+      <a href="{{ url_for('admin_dashboard') }}" class="admin-link">
+        &larr; Back to Dashboard
+      </a>
+    </div>
+  </header>
+
+  <!-- Form card -->
+  <div class="container">
+    <div class="form-card">
+
+      <h1 class="form-card-title">
+        {{ "Edit Experience Entry" if job else "Add Experience Entry" }}
+      </h1>
+
+      <form method="POST"
+            action="{{ url_for('admin_edit_experience', idx=idx) if idx is not none
+                       else url_for('admin_add_experience') }}">
+
+        {# Job / role title #}
+        <div class="form-group">
+          <label for="title">Role Title</label>
+          <input type="text" id="title" name="title" required
+                 placeholder="e.g. MEL Technology Manager"
+                 value="{{ job.title if job else '' }}">
+        </div>
+
+        {# Organisation name #}
+        <div class="form-group">
+          <label for="organization">Organisation</label>
+          <input type="text" id="organization" name="organization" required
+                 placeholder="e.g. International Rescue Committee"
+                 value="{{ job.organization if job else '' }}">
+        </div>
+
+        {# Date range — free text for flexibility #}
+        <div class="form-group">
+          <label for="period">Period</label>
+          <input type="text" id="period" name="period" required
+                 placeholder="e.g. 2020 – Present"
+                 value="{{ job.period if job else '' }}">
+        </div>
+
+        {#
+          Highlights — one bullet point per line.
+          Flask splits on newlines; join back with newlines for editing.
+        #}
+        <div class="form-group">
+          <label for="highlights">Highlights</label>
+          <textarea id="highlights" name="highlights" rows="7"
+                    placeholder="Led design of multi-country ETL pipelines&#10;Reduced reporting time by 70%&#10;Managed team of 5 data specialists">{{ job.highlights | join('\n') if job else '' }}</textarea>
+          <p class="field-hint">One bullet point per line — no dashes or asterisks needed.</p>
+        </div>
+
+        <!-- Save and cancel buttons -->
+        <div class="form-actions">
+          <button type="submit" class="submit-button" style="flex:1;">
+            {{ "Save Changes" if job else "Add Entry" }}
+          </button>
+          <a href="{{ url_for('admin_dashboard') }}" class="btn-cancel">
+            Cancel
+          </a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</body>
+</html>

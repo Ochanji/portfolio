@@ -1,0 +1,45 @@
+[
+  {
+    "title": "MEL Technology Manager",
+    "organization": "International Rescue Committee (IRC) / REACH Initiative",
+    "period": "2020 – Present",
+    "highlights": [
+      "Led design and implementation of multi-country data systems for immunization and health programmes across 5 countries",
+      "Built and maintained ETL pipelines integrating DHIS2, CommCare, and custom REST APIs into centralised Power BI dashboards",
+      "Reduced manual reporting workload by 70% through workflow automation and scheduled data refreshes",
+      "Managed a team of 5 data specialists; coordinated with regional leads and international donors"
+    ]
+  },
+  {
+    "title": "Senior Data Systems Consultant",
+    "organization": "Global Fund / Kenya Red Cross Society",
+    "period": "2018 – 2020",
+    "highlights": [
+      "Established national-level data quality and reporting systems for HIV/TB programme monitoring",
+      "Coordinated technical implementation with Ministry of Health, NASCOP, and the Country Coordinating Mechanism",
+      "Implemented compliance monitoring dashboards covering $50M+ in Global Fund grant portfolios",
+      "Led capacity building initiatives for 200+ implementing partners on data standards and reporting tools"
+    ]
+  },
+  {
+    "title": "MEL Systems Specialist",
+    "organization": "International NGOs (UNICEF, WHO, CDC affiliates)",
+    "period": "2014 – 2018",
+    "highlights": [
+      "Designed MEL frameworks and automated reporting pipelines for PEPFAR and Gavi-funded programmes",
+      "Built Python and R data pipelines that reduced manual reporting workload by 40%",
+      "Integrated KenyaEMR and national HMIS systems for longitudinal patient-level data tracking",
+      "Supported programme evaluations and impact assessments across multiple sub-Saharan African countries"
+    ]
+  },
+  {
+    "title": "Data Analyst & Systems Developer",
+    "organization": "Freelance / Various Clients",
+    "period": "2012 – 2014",
+    "highlights": [
+      "Delivered custom database solutions and Tableau/Excel dashboards for SME and NGO clients",
+      "Built SQL-based reporting systems for operational management and donor compliance",
+      "Provided data science consulting for research projects and programme evaluations"
+    ]
+  }
+]

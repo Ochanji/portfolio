@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<!--
+  admin/login.html — standalone login page (does not extend base.html)
+  Uses minimal inline styles so it works even if the portfolio CSS has issues.
+-->
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login — Vincent Ochanji Portfolio</title>
+
+  {# Reuse the portfolio stylesheet for consistent look #}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
+  <style>
+    /* ── Login page layout ─────────────────────────────────────────────────── */
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    /* Card container */
+    .login-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 380px;
+    }
+
+    /* Heading above the form */
+    .login-heading {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .login-sub {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 1.75rem;
+    }
+
+    /* Error banner shown when credentials are wrong */
+    .login-error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 0.5rem;
+      color: #f87171;
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
+      margin-bottom: 1.25rem;
+    }
+
+    /* Back link to public site */
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 1.25rem;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+    .back-link:hover { color: var(--accent); }
+  </style>
+</head>
+
+<body>
+  <div class="login-card">
+
+    <h1 class="login-heading">Admin Login</h1>
+    <p class="login-sub">Portfolio content manager</p>
+
+    {# Show error message if credentials were wrong on the previous attempt #}
+    {% if error %}
+    <div class="login-error" role="alert">
+      <i class="fas fa-exclamation-circle"></i> {{ error }}
+    </div>
+    {% endif %}
+
+    {# Login form — POST to /admin/login #}
+    <form method="POST" action="{{ url_for('admin_login') }}" novalidate>
+
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username"
+               autocomplete="username" required autofocus>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password"
+               autocomplete="current-password" required>
+      </div>
+
+      <button type="submit" class="submit-button">Sign In</button>
+
+    </form>
+
+    <a href="{{ url_for('home') }}" class="back-link">
+      &larr; Back to portfolio
+    </a>
+
+  </div>
+
+  {# Font Awesome for the error icon #}
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        crossorigin="anonymous">
+</body>
+</html>

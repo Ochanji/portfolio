@@ -1,0 +1,23 @@
+# Environment & secrets — never commit these
+.env
+
+# Python virtual environment
+.venv/
+venv/
+env/
+
+# Byte-compiled / optimised files
+__pycache__/
+*.py[cod]
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# OS artefacts
+.DS_Store
+Thumbs.db
+
+# Uploaded media (not tracked in git — persists on server only)
+static/uploads/

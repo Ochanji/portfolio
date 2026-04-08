@@ -1,0 +1,79 @@
+{
+  "about": {
+    "bio": [
+      "I'm a Data Engineer and Digital Systems Specialist with over 10 years of experience building the data infrastructure behind complex, high-stakes programmes. From ETL pipelines and API integrations to Power BI dashboards and self-hosted Docker stacks, I work across the full data lifecycle.",
+      "What sets me apart is the combination of deep technical capability and applied domain knowledge. I've built systems for global health, humanitarian operations, and enterprise analytics — and I bring the same rigour and attention to data quality to every engagement, regardless of sector."
+    ],
+    "social": {
+      "linkedin": "https://linkedin.com/in/yourprofile",
+      "github": "https://github.com/yourusername",
+      "email": "vochanji@hotmail.com"
+    }
+  },
+  "avatar": null,
+  "contact": {
+    "email": "vochanji@hotmail.com",
+    "github": "https://github.com/yourusername",
+    "linkedin": "https://linkedin.com/in/yourprofile",
+    "location": "Nairobi, Kenya",
+    "whatsapp": ""
+  },
+  "hero": {
+    "greeting": "Hello, I'm",
+    "tagline": "Engineering the systems that turn raw data into decisions — from pipelines to dashboards to production infrastructure."
+  },
+  "name": "Vincent Ochanji",
+  "skills": [
+    {
+      "category": "Data Engineering",
+      "icon": "fa-database",
+      "tags": [
+        "Python",
+        "SQL",
+        "R",
+        "ETL Pipelines",
+        "API Integrations",
+        "PostgreSQL",
+        "MySQL",
+        "Git"
+      ]
+    },
+    {
+      "category": "Analytics & BI",
+      "icon": "fa-chart-bar",
+      "tags": [
+        "Power BI",
+        "Tableau",
+        "Data Visualisation",
+        "Statistical Analysis",
+        "R (ggplot2)",
+        "Report Automation"
+      ]
+    },
+    {
+      "category": "Digital Systems",
+      "icon": "fa-network-wired",
+      "tags": [
+        "CommCare",
+        "DHIS2",
+        "KenyaEMR",
+        "n8n Automation",
+        "ODK",
+        "System Integration"
+      ]
+    },
+    {
+      "category": "Infrastructure",
+      "icon": "fa-server",
+      "tags": [
+        "Proxmox",
+        "Docker",
+        "Linux (Ubuntu/Debian)",
+        "VPS Deployment",
+        "Bash",
+        "Reverse Proxy / SSL"
+      ]
+    }
+  ],
+  "title": "Data Engineer & Digital Systems Specialist"
+}

@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+{#
+  index.html — main portfolio page
+  All text content is driven by profile.json (via the inject_profile context processor)
+  and data/projects.json + data/experience.json.
+
+  When logged in as admin, section edit buttons appear in edit mode,
+  and per-card edit/delete controls appear on projects and experience.
+#}
+
+{% block content %}
+
+{# ── 1. HERO ──────────────────────────────────────────────────────────────── #}
+<section id="hero" class="hero" data-section="hero" aria-label="Introduction">
+  <div class="container hero-content">
+
+    {% if session.admin_logged_in %}
+    <div class="section-admin-bar">
+      <button class="section-edit-btn" onclick="AdminPanel.openEditSection('hero')">
+        <i class="fas fa-pencil-alt"></i> Edit Hero
+      </button>
+    </div>
+    {% endif %}
+
+    <p class="hero-greeting">{{ profile.get('hero', {}).get('greeting', "Hello, I'm") }}</p>
+    <h1 class="hero-title">{{ profile.get('name', 'Your Name') }}</h1>
+    <p class="hero-role">{{ profile.get('title', 'Your Title') }}</p>
+    <p class="hero-tagline">{{ profile.get('hero', {}).get('tagline', '') }}</p>
+
+    <div class="hero-buttons">
+      <a href="#projects" class="cta-button">View Work</a>
+      <a href="#contact"  class="cta-button secondary">Contact Me</a>
+    </div>
+
+  </div>
+</section>
+
+
+{# ── 2. ABOUT ─────────────────────────────────────────────────────────────── #}
+<section id="about" class="about" data-section="about" aria-label="About me">
+  <div class="container">
+
+    {% if session.admin_logged_in %}
+    <div class="section-admin-bar">
+      <button class="section-edit-btn" onclick="AdminPanel.openEditSection('about')">
+        <i class="fas fa-pencil-alt"></i> Edit About
+      </button>
+    </div>
+    {% endif %}
+
+    <h2 class="section-title">About Me</h2>
+
+    <div class="about-content">
+
+      <div class="about-avatar">
+        {% if profile.get('avatar') %}
+        <img src="{{ profile.avatar }}" alt="{{ profile.get('name', '') }}" class="avatar-photo">
+        {% else %}
+        <div class="avatar-initials" aria-hidden="true">{{ profile.get('name', 'VO')|initials }}</div>
+        {% endif %}
+      </div>
+
+      <div class="about-text-content">
+
+        {% for para in profile.get('about', {}).get('bio', []) %}
+        <p class="about-text">{{ para }}</p>
+        {% endfor %}
+
+        {% set social = profile.get('about', {}).get('social', {}) %}
+        <div class="social-links" aria-label="Social links">
+          <a href="{{ social.get('linkedin', '#') }}" target="_blank" rel="noopener noreferrer"
+             class="social-link about-social-linkedin" aria-label="LinkedIn">
+            <i class="fab fa-linkedin" aria-hidden="true"></i>
+          </a>
+          <a href="{{ social.get('github', '#') }}" target="_blank" rel="noopener noreferrer"
+             class="social-link about-social-github" aria-label="GitHub">
+            <i class="fab fa-github" aria-hidden="true"></i>
+          </a>
+          <a href="mailto:{{ social.get('email', '') }}"
+             class="social-link about-social-email" aria-label="Email">
+            <i class="fas fa-envelope" aria-hidden="true"></i>
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+
+{# ── 3. SKILLS ────────────────────────────────────────────────────────────── #}
+<section id="skills" class="skills" data-section="skills" aria-label="Skills and technology stack">
+  <div class="container">
+
+    {% if session.admin_logged_in %}
+    <div class="section-admin-bar">
+      <button class="section-edit-btn" onclick="AdminPanel.openEditSection('skills')">
+        <i class="fas fa-pencil-alt"></i> Edit Skills
+      </button>
+    </div>
+    {% endif %}
+
+    <h2 class="section-title">Skills &amp; Stack</h2>
+    <p class="section-subtitle">10+ years across the full data lifecycle</p>
+
+    <div class="skills-grid">
+      {% for group in profile.get('skills', []) %}
+      <div class="skill-group">
+        <h3 class="skill-category">
+          <i class="fas {{ group.icon }}" aria-hidden="true"></i>
+          {{ group.category }}
+        </h3>
+        <div class="skill-tags">
+          {% for tag in group.tags %}
+          <span class="skill-tag">{{ tag }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</section>
+
+
+{# ── 4. PROJECTS (first 3 shown — "View All" links to /projects) ─────────── #}
+<section id="projects" class="projects" data-section="projects" aria-label="Projects">
+  <div class="container">
+    <h2 class="section-title">Projects</h2>
+    <p class="section-subtitle">A selection of work — building data systems that matter.</p>
+
+    <div class="projects-grid">
+      {% for project in projects[:3] %}
+      <article class="case-study-card" data-idx="{{ loop.index0 }}">
+
+        {% if session.admin_logged_in %}
+        <div class="card-admin-controls" style="position:absolute;top:12px;right:12px;z-index:10;">
+          <button class="admin-btn admin-btn-small"
+                  onclick="AdminPanel.openEditProject({{ loop.index0 }})">
+            <i class="fas fa-pencil-alt"></i> Edit
+          </button>
+          <button class="admin-btn admin-btn-small admin-btn-danger"
+                  onclick="AdminPanel.deleteProject({{ loop.index0 }})">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        {% endif %}
+
+        {# Header: image with overlay OR gradient mesh band #}
+        <div class="cs-header">
+          {% if project.image %}
+          <img src="{{ project.image }}" alt="{{ project.title }}" class="cs-header-img">
+          <div class="cs-header-overlay"></div>
+          {% endif %}
+          <p class="cs-tagline">{{ project.tagline }}</p>
+        </div>
+
+        {# Metrics strip #}
+        {% if project.metrics %}
+        <div class="cs-metrics">
+          {% for m in project.metrics %}
+          <div class="cs-metric">
+            <span class="cs-metric-value">{{ m.value }}</span>
+            <span class="cs-metric-label">{{ m.label }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {# Body #}
+        <div class="cs-body">
+          <h3 class="cs-title">{{ project.title }}</h3>
+
+          <div class="cs-psi">
+            <div class="cs-psi-item">
+              <span class="cs-psi-label cs-psi-problem">Problem</span>
+              <p class="cs-psi-text">{{ project.problem }}</p>
+            </div>
+            <div class="cs-psi-item">
+              <span class="cs-psi-label cs-psi-solution">Solution</span>
+              <p class="cs-psi-text">{{ project.solution }}</p>
+            </div>
+            <div class="cs-psi-item">
+              <span class="cs-psi-label cs-psi-impact">Impact</span>
+              <p class="cs-psi-text">{{ project.impact }}</p>
+            </div>
+          </div>
+
+          <div class="project-tags">
+            {% for tag in project.tags %}
+            <span class="tag">{{ tag }}</span>
+            {% endfor %}
+          </div>
+
+          <div class="project-links">
+            <a href="{{ project.github }}" class="project-link"
+               target="_blank" rel="noopener noreferrer">
+              <i class="fab fa-github" aria-hidden="true"></i> GitHub
+            </a>
+            <a href="{{ project.demo }}" class="project-link demo"
+               target="_blank" rel="noopener noreferrer">
+              <i class="fas fa-external-link-alt" aria-hidden="true"></i> Live Demo
+            </a>
+          </div>
+        </div>
+
+      </article>
+      {% endfor %}
+    </div>
+
+    {# "View All" button — always shown #}
+    <div class="projects-footer">
+      <a href="/projects" class="cta-button secondary projects-view-all">
+        View All Projects <i class="fas fa-arrow-right"></i>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+
+{# ── 5. EXPERIENCE ────────────────────────────────────────────────────────── #}
+<section id="experience" class="experience" data-section="experience" aria-label="Work experience">
+  <div class="container">
+    <h2 class="section-title">Experience</h2>
+    <p class="section-subtitle">A decade of building data systems that matter</p>
+
+    <div class="timeline">
+      {% for job in experience %}
+      <div class="timeline-item" data-idx="{{ loop.index0 }}">
+
+        <div class="timeline-dot" aria-hidden="true"></div>
+
+        <div class="timeline-content">
+
+          {% if session.admin_logged_in %}
+          <div class="card-admin-controls">
+            <button class="admin-btn admin-btn-small"
+                    onclick="AdminPanel.openEditExperience({{ loop.index0 }})">
+              <i class="fas fa-pencil-alt"></i> Edit
+            </button>
+            <button class="admin-btn admin-btn-small admin-btn-danger"
+                    onclick="AdminPanel.deleteExperience({{ loop.index0 }})">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          {% endif %}
+
+          <h3 class="timeline-title">{{ job.title }}</h3>
+          <p class="timeline-org">{{ job.organization }}</p>
+          <p class="timeline-period">
+            <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+            {{ job.period }}
+          </p>
+          <ul class="timeline-details">
+            {% for point in job.highlights %}
+            <li>{{ point }}</li>
+            {% endfor %}
+          </ul>
+
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</section>
+
+
+{# ── 6. CONTACT ───────────────────────────────────────────────────────────── #}
+<section id="contact" class="contact" data-section="contact" aria-label="Contact">
+  <div class="container">
+
+    {% if session.admin_logged_in %}
+    <div class="section-admin-bar">
+      <button class="section-edit-btn" onclick="AdminPanel.openEditSection('contact')">
+        <i class="fas fa-pencil-alt"></i> Edit Contact
+      </button>
+    </div>
+    {% endif %}
+
+    <h2 class="section-title">Get In Touch</h2>
+    <p class="section-subtitle">
+      Open to data engineering roles, consulting, and freelance projects.
+    </p>
+
+    <div class="contact-wrapper">
+
+      {% set contact = profile.get('contact', {}) %}
+      <div class="contact-info">
+
+        <div class="contact-item">
+          <i class="fas fa-envelope" aria-hidden="true"></i>
+          <a href="mailto:{{ contact.get('email', '') }}" class="contact-email-link">
+            {{ contact.get('email', '') }}
+          </a>
+        </div>
+
+        <div class="contact-item">
+          <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+          <span class="contact-location-text">{{ contact.get('location', '') }}</span>
+        </div>
+
+        <div class="contact-item">
+          <i class="fab fa-linkedin" aria-hidden="true"></i>
+          <a href="{{ contact.get('linkedin', '#') }}" class="contact-linkedin-link"
+             target="_blank" rel="noopener noreferrer">LinkedIn Profile</a>
+        </div>
+
+        <div class="contact-item">
+          <i class="fab fa-github" aria-hidden="true"></i>
+          <a href="{{ contact.get('github', '#') }}" class="contact-github-link"
+             target="_blank" rel="noopener noreferrer">GitHub Profile</a>
+        </div>
+
+        {% if contact.get('whatsapp') %}
+        <div class="contact-item">
+          <i class="fab fa-whatsapp" aria-hidden="true"></i>
+          <a href="https://wa.me/{{ contact.get('whatsapp', '') | replace('+', '') | replace(' ', '') }}"
+             class="contact-whatsapp-link" target="_blank" rel="noopener noreferrer">
+            WhatsApp
+          </a>
+        </div>
+        {% endif %}
+
+      </div>
+
+      <form class="contact-form" id="contact-form" aria-label="Send me a message">
+
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name"
+                 placeholder="Your name" required autocomplete="name">
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email"
+                 placeholder="your@email.com" required autocomplete="email">
+        </div>
+
+        <div class="form-group">
+          <label for="message">Message</label>
+          <textarea id="message" name="message" rows="5"
+                    placeholder="Tell me about your project or enquiry…" required></textarea>
+        </div>
+
+        <button type="submit" class="submit-button" id="submit-btn">Send Message</button>
+        <p class="form-feedback" id="form-feedback" aria-live="polite"></p>
+
+      </form>
+
+    </div>
+  </div>
+</section>
+
+{% endblock %}

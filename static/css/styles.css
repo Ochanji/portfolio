@@ -1,0 +1,1597 @@
+/*
+ * styles.css — Vincent Ochanji Portfolio
+ * =========================================================
+ * Architecture:
+ *   1. CSS custom properties (dark theme default + light override)
+ *   2. Reset & base
+ *   3. Layout utilities
+ *   4. Navbar
+ *   5. Hero
+ *   6. About
+ *   7. Skills
+ *   8. Projects
+ *   9. Experience / timeline
+ *  10. Contact
+ *  11. Footer
+ *  12. Shared form styles
+ *  13. Animations & transitions
+ *  14. Responsive (≤ 768 px)
+ *
+ * Removed (no longer in the HTML):
+ *   - .hero-stats / .stat — replaced by plain tagline
+ *   - .testimonials / .testimonial-card
+ *   - .services-grid / .service-card
+ *   - .blog-grid / .blog-post
+ *   - .cta-section — removed from base.html
+ *   - .project-impact / .project-details — not in new card design
+ *   - .achievements / .achievement — replaced by .about-highlights
+ *   - .client-logos / .client-logo — removed from footer
+ */
+
+
+/* ── 1. CSS CUSTOM PROPERTIES ─────────────────────────────────────────────── */
+
+:root {
+  /* Backgrounds — richer, warmer dark */
+  --bg-primary:   #080c14;
+  --bg-secondary: #0d1320;
+  --bg-card:      #111827;
+
+  /* Brand accents */
+  --accent:        #3b82f6;   /* primary blue */
+  --accent-dark:   #2563eb;   /* hover / pressed */
+  --accent-2:      #818cf8;   /* indigo — gradient partner */
+  --accent-metric: #34d399;   /* emerald — positive outcomes */
+  --accent-problem:#fbbf24;   /* amber  — challenge/problem label */
+  --accent-impact: #34d399;   /* emerald — impact label */
+  --accent-solution: #60a5fa; /* light blue — solution label */
+
+  /* Brand gradient (used for headings, nav brand, etc.) */
+  --gradient-brand: linear-gradient(135deg, var(--accent-2) 0%, var(--accent) 60%, #60a5fa 100%);
+
+  /* Text */
+  --text-primary:   #f8fafc;
+  --text-secondary: #e2e8f0;
+  --text-muted:     #94a3b8;
+  --text-body:      #cbd5e1;
+
+  /* Borders */
+  --border:        rgba(99, 102, 241, 0.12);
+  --border-hover:  #6366f1;
+
+  /* Tags */
+  --tag-bg:   #1e2d45;
+  --tag-text: #93c5fd;
+
+  /* Inputs */
+  --input-bg:     #111827;
+  --input-border: #2d3748;
+
+  /* Navbar */
+  --nav-bg: rgba(8, 12, 20, 0.96);
+
+  /* Case study card */
+  --cs-header-h: 200px;
+}
+
+/* Light theme — toggled by data-theme="light" on <html> */
+[data-theme="light"] {
+  --bg-primary:   #f8fafc;
+  --bg-secondary: #f1f5f9;
+  --bg-card:      #ffffff;
+
+  --accent:        #2563eb;
+  --accent-dark:   #1d4ed8;
+  --accent-2:      #6366f1;
+  --accent-metric: #059669;
+  --accent-problem:#d97706;
+  --accent-impact: #059669;
+  --accent-solution: #2563eb;
+
+  --gradient-brand: linear-gradient(135deg, #6366f1 0%, #2563eb 60%, #3b82f6 100%);
+
+  --text-primary:   #0f172a;
+  --text-secondary: #1e293b;
+  --text-muted:     #64748b;
+  --text-body:      #475569;
+
+  --border:       rgba(99, 102, 241, 0.15);
+  --border-hover: #6366f1;
+
+  --tag-bg:   #dbeafe;
+  --tag-text: #1d4ed8;
+
+  --input-bg:     #ffffff;
+  --input-border: #cbd5e1;
+
+  --nav-bg: rgba(248, 250, 252, 0.96);
+}
+
+
+/* ── 2. RESET & BASE ─────────────────────────────────────────────────────── */
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  /* Smooth scrolling for in-page anchor links */
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  background-color: var(--bg-primary);
+  overflow-x: hidden;
+  /* Smooth colour transition when toggling theme */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+ul { list-style: none; }
+
+/* Inline link used in section subtitles */
+.inline-link {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.inline-link:hover { color: var(--accent-dark); }
+
+
+/* ── 3. LAYOUT UTILITIES ─────────────────────────────────────────────────── */
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+/* Section headings with gradient underline */
+.section-title {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 700;
+  text-align: center;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+  position: relative;
+  display: inline-block;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.section-title::after {
+  content: '';
+  display: block;
+  height: 3px;
+  width: 48px;
+  margin: 0.45rem auto 0;
+  border-radius: 9999px;
+  background: var(--gradient-brand);
+}
+
+.section-subtitle {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 1rem;
+  max-width: 560px;
+  margin: 0 auto 3rem;
+}
+
+
+/* ── 4. NAVBAR ───────────────────────────────────────────────────────────── */
+
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  background: var(--nav-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0.875rem 0;
+  transition: background-color 0.3s ease;
+}
+
+/* Three-column flex row inside the navbar */
+.nav-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* Brand monogram — gradient */
+.nav-brand {
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  flex-shrink: 0;
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.nav-brand:hover { opacity: 0.85; }
+
+/* Desktop navigation links */
+.nav-links {
+  display: flex;
+  gap: 2rem;
+}
+
+.nav-links a {
+  font-size: 0.925rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: color 0.25s;
+  position: relative;
+  padding-bottom: 2px;
+}
+
+/* Animated underline on hover */
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--accent);
+  transition: width 0.25s ease;
+}
+.nav-links a:hover { color: var(--accent); }
+.nav-links a:hover::after { width: 100%; }
+
+/* Right-side controls: theme toggle + hamburger */
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+/* ── Theme toggle button ── */
+.theme-toggle {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.95rem;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.25s, border-color 0.25s, background 0.25s;
+}
+.theme-toggle:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--bg-card);
+}
+
+/* ── Hamburger (mobile only) ── */
+.hamburger {
+  display: none;              /* shown via media query */
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--text-secondary);
+  border-radius: 2px;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Animated X when menu is open */
+.hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+.hamburger.active span:nth-child(2) { opacity: 0; }
+.hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+
+/* ── 5. HERO ─────────────────────────────────────────────────────────────── */
+
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  /* Subtle radial gradient orb behind the text */
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 40%, rgba(59, 130, 246, 0.08) 0%, transparent 70%),
+    var(--bg-primary);
+  padding: 6rem 1rem 3rem;  /* top padding clears fixed navbar */
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decorative dot-grid background */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(59,130,246,0.12) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+/* Centres all hero children */
+.hero-content {
+  position: relative;       /* above ::before */
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+/* "Hello, I'm" greeting line */
+.hero-greeting {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+/* Full name — gradient text */
+.hero-title {
+  font-size: clamp(2.5rem, 7vw, 4.5rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  margin-bottom: 0.5rem;
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Role / job title */
+.hero-role {
+  font-size: clamp(1rem, 3vw, 1.4rem);
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 1.25rem;
+}
+
+/* One-line positioning tagline */
+.hero-tagline {
+  font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+  color: var(--text-muted);
+  max-width: 600px;
+  margin: 0 auto 2.5rem;
+  line-height: 1.7;
+}
+
+/* CTA button row */
+.hero-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Primary CTA */
+.cta-button {
+  display: inline-block;
+  padding: 0.875rem 2rem;
+  background: var(--accent);
+  color: #ffffff;
+  border: 2px solid var(--accent);
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background 0.25s, transform 0.2s, box-shadow 0.25s;
+}
+.cta-button:hover {
+  background: transparent;
+  color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.25);
+}
+
+/* Secondary / ghost CTA */
+.cta-button.secondary {
+  background: transparent;
+  color: var(--accent);
+}
+.cta-button.secondary:hover {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+
+/* ── 6. ABOUT ────────────────────────────────────────────────────────────── */
+
+.about {
+  padding: 6rem 0;
+  background: var(--bg-secondary);
+}
+
+/* Two-column layout: avatar left, text right */
+.about-content {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3rem;
+  align-items: center;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Avatar circle — replace inner div with <img> when photo is available */
+.about-avatar {
+  flex-shrink: 0;
+}
+
+.avatar-initials {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 3px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -1px;
+  /* Subtle glow on the avatar */
+  box-shadow: 0 0 40px rgba(59, 130, 246, 0.15);
+}
+
+/* Bio paragraphs */
+.about-text {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--text-body);
+  margin-bottom: 1.25rem;
+}
+
+/* Social icon row in about section */
+.social-links {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.social-link {
+  font-size: 1.4rem;
+  color: var(--text-muted);
+  transition: color 0.25s, transform 0.2s;
+}
+.social-link:hover {
+  color: var(--accent);
+  transform: translateY(-2px);
+}
+
+
+/* ── 7. SKILLS ───────────────────────────────────────────────────────────── */
+
+.skills {
+  padding: 6rem 0;
+  background: var(--bg-primary);
+}
+
+/* 2×2 grid on desktop */
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.skill-group {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1.75rem;
+  transition: border-color 0.25s;
+}
+.skill-group:hover { border-color: var(--border-hover); }
+
+/* Category heading with icon */
+.skill-category {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.skill-category i { color: var(--accent); }
+
+/* Tag pills */
+.skill-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.skill-tag {
+  background: var(--tag-bg);
+  color: var(--tag-text);
+  padding: 0.3rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+}
+.skill-tag:hover {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+
+/* ── 8. PROJECTS & CASE STUDY CARDS ──────────────────────────────────────── */
+
+.projects {
+  padding: 6rem 0;
+  background: var(--bg-secondary);
+}
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 2rem;
+  align-items: start;
+}
+
+/* ── Case study card shell ── */
+.case-study-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+  position: relative;
+}
+.case-study-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--border-hover);
+  box-shadow: 0 20px 50px rgba(99, 102, 241, 0.12);
+}
+
+/* Gradient top strip */
+.case-study-card::before {
+  content: '';
+  display: block;
+  height: 3px;
+  background: var(--gradient-brand);
+  flex-shrink: 0;
+}
+
+/* ── Header: screenshot or gradient band ── */
+.cs-header {
+  position: relative;
+  height: 180px;
+  background: linear-gradient(135deg,
+    rgba(99,102,241,0.18) 0%,
+    rgba(59,130,246,0.1) 50%,
+    rgba(52,211,153,0.06) 100%);
+  display: flex;
+  align-items: flex-end;
+  padding: 1rem 1.25rem;
+  overflow: hidden;
+}
+.cs-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(99,102,241,0.15) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+}
+
+.cs-header-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cs-header-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(8,12,20,0.88) 0%, transparent 60%);
+}
+
+.cs-tagline {
+  position: relative;
+  z-index: 1;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.4;
+  font-style: italic;
+}
+
+/* ── Metrics row ── */
+.cs-metrics {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+}
+.cs-metric {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem 0.4rem;
+  border-right: 1px solid var(--border);
+  text-align: center;
+}
+.cs-metric:last-child { border-right: none; }
+
+.cs-metric-value {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--accent-metric);
+  line-height: 1.1;
+  white-space: nowrap;
+  letter-spacing: -0.3px;
+}
+.cs-metric-label {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+  line-height: 1.3;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Card body ── */
+.cs-body {
+  padding: 1.4rem 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+}
+.cs-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+/* ── Problem / Solution / Impact ── */
+.cs-psi { display: flex; flex-direction: column; gap: 0.7rem; }
+.cs-psi-item { display: flex; flex-direction: column; gap: 0.25rem; }
+
+.cs-psi-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.16rem 0.55rem;
+  border-radius: 9999px;
+  width: fit-content;
+}
+
+.cs-psi-problem  { background: rgba(251,191,36,0.12);  color: var(--accent-problem);  }
+.cs-psi-solution { background: rgba(96,165,250,0.12);  color: var(--accent-solution); }
+.cs-psi-impact   { background: rgba(52,211,153,0.12);  color: var(--accent-impact);   }
+
+.cs-psi-text {
+  font-size: 0.845rem;
+  color: var(--text-body);
+  line-height: 1.65;
+}
+
+/* ── Tags & links (shared) ── */
+.project-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: auto;
+}
+.tag {
+  background: var(--tag-bg);
+  color: var(--tag-text);
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.project-links { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+.project-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.project-link:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(59,130,246,0.06);
+}
+.project-link.demo {
+  border-color: rgba(52,211,153,0.3);
+  color: var(--accent-metric);
+}
+.project-link.demo:hover {
+  border-color: var(--accent-metric);
+  background: rgba(52,211,153,0.06);
+}
+
+
+/* ── 9. EXPERIENCE / TIMELINE ────────────────────────────────────────────── */
+
+.experience {
+  padding: 6rem 0;
+  background: var(--bg-primary);
+}
+
+.timeline {
+  position: relative;
+  max-width: 800px;
+  margin: 0 auto;
+  padding-left: 2rem;
+}
+
+/* Vertical connecting line */
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--accent), transparent);
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 2.5rem;
+}
+.timeline-item:last-child { margin-bottom: 0; }
+
+/* Dot marker on the line */
+.timeline-dot {
+  position: absolute;
+  left: -1.7rem;
+  top: 1.1rem;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid var(--bg-primary);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+/* Card containing the role details */
+.timeline-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1.5rem 1.75rem;
+  transition: border-color 0.25s;
+}
+.timeline-content:hover { border-color: var(--border-hover); }
+
+.timeline-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.timeline-org {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 0.25rem;
+}
+
+.timeline-period {
+  font-size: 0.825rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Bullet-point highlights */
+.timeline-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.timeline-details li {
+  font-size: 0.9rem;
+  color: var(--text-body);
+  padding-left: 1rem;
+  position: relative;
+  line-height: 1.6;
+}
+
+/* Blue bullet */
+.timeline-details li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+}
+
+
+/* ── 10. CONTACT ─────────────────────────────────────────────────────────── */
+
+.contact {
+  padding: 6rem 0;
+  background: var(--bg-secondary);
+}
+
+/* Two-column layout: info left, form right */
+.contact-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 3rem;
+  align-items: start;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Each contact detail row: icon + text */
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-body);
+  font-size: 0.95rem;
+}
+
+.contact-item i {
+  color: var(--accent);
+  font-size: 1.1rem;
+  width: 1.4rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.contact-item a {
+  color: var(--text-body);
+  transition: color 0.2s;
+}
+.contact-item a:hover { color: var(--accent); }
+
+/* Inline success/error message shown after form submission */
+.form-feedback {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  min-height: 1.2rem;
+}
+.form-feedback.success { color: #34d399; }
+.form-feedback.error   { color: #f87171; }
+
+
+/* ── 11. FOOTER ──────────────────────────────────────────────────────────── */
+
+.footer {
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+  padding: 2.5rem 0 1.5rem;
+}
+
+.footer-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  text-align: center;
+}
+
+.footer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.footer-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.footer-title {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.footer-social {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.footer-copy {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+
+/* ── 12. SHARED FORM STYLES ──────────────────────────────────────────────── */
+/*
+ * Used by: public contact form (index.html)
+ *           admin forms (login, project_form, experience_form)
+ */
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.4rem;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 0.7rem 0.875rem;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 0.5rem;
+  color: var(--text-secondary);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 130px;
+}
+
+/* Primary form submit button */
+.submit-button {
+  display: block;
+  width: 100%;
+  padding: 0.875rem;
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.25s, transform 0.2s, box-shadow 0.25s;
+}
+.submit-button:hover {
+  background: var(--accent-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.3);
+}
+.submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+
+/* ── 13. ANIMATIONS & TRANSITIONS ────────────────────────────────────────── */
+
+/* Fade-in-up: applied by IntersectionObserver in script.js */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.55s ease-out both;
+}
+
+
+/* ── 14. ALL-PROJECTS PAGE ───────────────────────────────────────────────── */
+
+.projects-page {
+  padding: 8rem 0 6rem;
+  background: var(--bg-primary);
+  min-height: 100vh;
+}
+
+.projects-page-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.projects-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+  transition: color 0.2s;
+}
+.projects-back-link:hover { color: var(--accent); }
+
+.projects-footer {
+  text-align: center;
+  margin-top: 2.5rem;
+}
+
+.projects-view-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.projects-empty {
+  color: var(--text-muted);
+  text-align: center;
+  padding: 2rem;
+  grid-column: 1 / -1;
+}
+
+
+/* ── 15. ADMIN BAR ───────────────────────────────────────────────────────── */
+
+/* Extra bottom padding when admin bar is visible */
+body.admin-active {
+  padding-bottom: 52px;
+}
+
+/* Fixed toolbar at the very bottom */
+.admin-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  height: 52px;
+  background: #0d1117;
+  border-top: 2px solid var(--accent);
+  display: flex;
+  align-items: center;
+}
+
+.admin-bar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  padding: 0 1.25rem;
+}
+
+.admin-bar-brand {
+  font-size: 0.825rem;
+  font-weight: 700;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.admin-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: nowrap;
+}
+
+/* Edit mode toggle label */
+.edit-mode-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.775rem;
+  color: #94a3b8;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* CSS toggle switch */
+.toggle-switch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-track {
+  position: absolute;
+  inset: 0;
+  background: #334155;
+  border-radius: 10px;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+
+.toggle-switch input:checked + .toggle-track {
+  background: var(--accent);
+}
+
+.toggle-thumb {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: #ffffff;
+  border-radius: 50%;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.2s;
+  pointer-events: none;
+}
+
+.toggle-switch input:checked + .toggle-track .toggle-thumb {
+  transform: translateX(16px);
+}
+
+/* Buttons inside the dark admin bar */
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 0.375rem;
+  font-size: 0.775rem;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.07);
+  color: #e2e8f0;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, border-color 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+.admin-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.admin-btn-primary {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #ffffff !important;
+}
+.admin-btn-primary:hover {
+  background: var(--accent-dark) !important;
+  border-color: var(--accent-dark) !important;
+}
+
+.admin-btn-danger {
+  background: rgba(239, 68, 68, 0.12) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #f87171 !important;
+}
+.admin-btn-danger:hover {
+  background: rgba(239, 68, 68, 0.24) !important;
+  border-color: #f87171 !important;
+}
+
+.admin-btn-small {
+  padding: 0.2rem 0.5rem !important;
+  font-size: 0.72rem !important;
+}
+
+
+/* ── 16. SECTION EDIT OVERLAYS ───────────────────────────────────────────── */
+
+/* Row that holds the section edit button — hidden until edit mode is on */
+.section-admin-bar {
+  display: none;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+body.admin-edit-mode .section-admin-bar {
+  display: flex;
+}
+
+/* The edit button itself */
+.section-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.85rem;
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  font-family: 'Inter', sans-serif;
+}
+.section-edit-btn:hover {
+  background: var(--accent-dark);
+  transform: translateY(-1px);
+}
+
+/* Per-card admin controls (Edit / Delete buttons on each project card / timeline item) */
+.card-admin-controls {
+  display: none;
+  gap: 0.4rem;
+  justify-content: flex-end;
+  margin-bottom: 0.75rem;
+}
+
+body.admin-edit-mode .card-admin-controls {
+  display: flex;
+}
+
+/* In edit mode, outline each editable section */
+body.admin-edit-mode section[data-section] {
+  outline: 2px dashed rgba(59, 130, 246, 0.22);
+  outline-offset: -2px;
+}
+
+
+/* ── 17. ADMIN MODALS ────────────────────────────────────────────────────── */
+
+/* Shared modal shell */
+.admin-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.admin-modal.active {
+  display: flex;
+}
+
+/* Semi-transparent backdrop */
+.admin-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Modal box */
+.admin-modal-box {
+  position: relative;
+  z-index: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  width: 100%;
+  max-width: 560px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55);
+}
+
+/* Narrower login modal */
+.admin-login-box {
+  max-width: 380px;
+}
+
+/* Header: title + close button */
+.admin-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.2rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.admin-modal-header h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.admin-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+.admin-modal-close:hover { color: var(--text-primary); }
+
+/* Scrollable form body */
+.admin-modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Fixed footer: error message + Cancel / Save */
+.admin-modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.admin-modal-footer-btns {
+  display: flex;
+  gap: 0.65rem;
+  justify-content: flex-end;
+}
+
+/* Override admin-btn colours for the modal context (themed, not always-dark) */
+.admin-modal-footer .admin-btn {
+  background: var(--bg-secondary);
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+.admin-modal-footer .admin-btn:hover {
+  background: var(--bg-card);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+.admin-modal-footer .admin-btn-primary {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #ffffff !important;
+}
+.admin-modal-footer .admin-btn-primary:hover {
+  background: var(--accent-dark) !important;
+}
+
+/* Inline error message */
+.modal-error {
+  font-size: 0.825rem;
+  color: #f87171;
+  min-height: 1rem;
+  margin: 0;
+}
+
+/* Skill group editor block inside modal */
+.skill-group-editor {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.skill-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* Section separator label within a modal form */
+.form-section-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding-top: 1.25rem;
+  margin: 1rem 0 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+
+/* ── 18. AVATAR PHOTO & UPLOAD UI ───────────────────────────────────────── */
+
+/* When a real photo is set — circular, same size as the initials placeholder */
+.avatar-photo {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--accent);
+  box-shadow: 0 0 40px rgba(59, 130, 246, 0.15);
+  display: block;
+}
+
+/* Upload preview circle inside the modal */
+.upload-preview {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--bg-secondary);
+  border: 2px dashed var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+  flex-shrink: 0;
+  transition: border-color 0.2s;
+}
+
+.upload-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.upload-preview .upload-placeholder {
+  color: var(--text-muted);
+  font-size: 2rem;
+}
+
+.upload-preview .upload-spinner {
+  color: var(--accent);
+  font-size: 1.4rem;
+}
+
+/* Row of upload controls below the preview */
+.upload-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Footer edit bar — centred above footer content */
+.footer-edit-bar {
+  justify-content: center;
+  padding: 0.75rem 0 0;
+}
+
+
+/* ── 19. ADMIN LOGIN TRIGGER ─────────────────────────────────────────────── */
+
+/* Subtle lock icon fixed at bottom-right, only when not logged in */
+.admin-trigger {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  z-index: 8888;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.35;
+  transition: opacity 0.2s, color 0.2s, border-color 0.2s;
+}
+.admin-trigger:hover {
+  opacity: 1;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+
+/* ── 19. RESPONSIVE (≤ 768 px) ───────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+
+  /* ── Navbar ── */
+  .nav-links {
+    /* Hidden by default; shown when .active is added by script.js */
+    display: none;
+    flex-direction: column;
+    gap: 0;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--nav-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 0 1rem;
+  }
+
+  .nav-links.active { display: flex; }
+
+  .nav-links a {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+  }
+
+  /* Show hamburger, keep theme toggle */
+  .hamburger { display: flex; }
+
+  /* Navbar itself must be position:relative for the dropdown to anchor */
+  .navbar { position: fixed; }
+
+  /* ── Hero ── */
+  .hero-buttons { flex-direction: column; align-items: center; }
+
+  /* ── About ── */
+  .about-content {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .about-avatar { margin: 0 auto; }
+  .social-links { justify-content: center; }
+
+  /* ── Skills ── */
+  .skills-grid { grid-template-columns: 1fr; }
+
+  /* ── Projects ── */
+  .projects-grid { grid-template-columns: 1fr; }
+
+  /* ── Experience ── */
+  .timeline { padding-left: 1.5rem; }
+  .timeline-dot { left: -1.35rem; }
+
+  /* ── Contact ── */
+  .contact-wrapper { grid-template-columns: 1fr; }
+
+}
