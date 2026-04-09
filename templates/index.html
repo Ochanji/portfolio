@@ -30,12 +30,6 @@
     <div class="hero-buttons">
       <a href="#projects" class="cta-button">View Work</a>
       <a href="#contact"  class="cta-button secondary">Contact Me</a>
-      {% if profile.get('cv_url') %}
-      <a href="{{ profile.cv_url }}" class="cta-button cv-download-btn" download
-         aria-label="Download CV">
-        <i class="fas fa-download" aria-hidden="true"></i> Download CV
-      </a>
-      {% endif %}
     </div>
 
   </div>
@@ -86,6 +80,12 @@
              class="social-link about-social-email" aria-label="Email">
             <i class="fas fa-envelope" aria-hidden="true"></i>
           </a>
+          {% if profile.get('cv_url') %}
+          <a href="{{ profile.cv_url }}" class="cv-download-btn about-cv-btn" download
+             aria-label="Download CV" title="Download CV">
+            <i class="fas fa-file-download" aria-hidden="true"></i>
+          </a>
+          {% endif %}
         </div>
 
       </div>

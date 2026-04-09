@@ -49,6 +49,11 @@
       </ul>
 
       <div class="nav-actions">
+        {% if profile.get('cv_url') %}
+        <a href="{{ profile.cv_url }}" class="nav-cv-btn" download aria-label="Download CV">
+          <i class="fas fa-file-download" aria-hidden="true"></i> CV
+        </a>
+        {% endif %}
         <button class="theme-toggle" id="theme-toggle" aria-label="Toggle colour theme">
           <i class="fas fa-sun"  id="icon-sun"  aria-hidden="true"></i>
           <i class="fas fa-moon" id="icon-moon" aria-hidden="true" style="display:none"></i>
