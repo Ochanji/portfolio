@@ -94,6 +94,50 @@ const AdminPanel = {
   },
 
 
+  // ── CV upload ──────────────────────────────────────────────────────────────
+
+  openUploadCV() {
+    const body = `
+      <div class="form-group">
+        <label>Upload CV / Resume (PDF, DOC, or DOCX — max 5 MB)</label>
+        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-top:.5rem">
+          <label class="admin-btn" style="cursor:pointer">
+            <i class="fas fa-file-upload"></i> Choose file
+            <input type="file" accept=".pdf,.doc,.docx" style="display:none"
+                   id="cv-file-input">
+          </label>
+          <span id="cv-file-name" style="color:var(--text-muted);font-size:.85rem">No file chosen</span>
+        </div>
+        <p id="cv-current" style="margin-top:.75rem;font-size:.8rem;color:var(--text-muted)"></p>
+      </div>`;
+
+    this.openModal('Upload CV', body, 'Upload', async () => {
+      const input = document.getElementById('cv-file-input');
+      if (!input.files || !input.files[0]) {
+        this._modalError('Please choose a file first.'); return;
+      }
+      const fd = new FormData();
+      fd.append('file', input.files[0]);
+      const r = await this._post('/admin/api/cv', fd);
+      if (r.status !== 'ok') { this._modalError(r.message); return; }
+      this.closeModal();
+      // Update Download CV button in hero if present
+      const dlBtn = document.querySelector('.cv-download-btn');
+      if (dlBtn) { dlBtn.href = r.url; dlBtn.style.display = ''; }
+      else { window.location.reload(); }
+    });
+
+    // Show filename on select
+    setTimeout(() => {
+      const inp = document.getElementById('cv-file-input');
+      if (inp) inp.addEventListener('change', () => {
+        document.getElementById('cv-file-name').textContent =
+          inp.files[0]?.name || 'No file chosen';
+      });
+    }, 80);
+  },
+
+
   // ── Shared modal ───────────────────────────────────────────────────────────
 
   openModal(title, bodyHTML, saveLabel, onSave) {
@@ -439,6 +483,36 @@ const AdminPanel = {
 
   // ── Project CRUD ───────────────────────────────────────────────────────────
 
+  // ── Project reorder ────────────────────────────────────────────────────────
+
+  async moveProject(idx, direction) {
+    const projects = await this._get('/admin/api/projects');
+    if (!Array.isArray(projects)) return;
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= projects.length) return;
+    const order = projects.map((_, i) => i);
+    [order[idx], order[newIdx]] = [order[newIdx], order[idx]];
+    const r = await this._post('/admin/api/projects/reorder', { order });
+    if (r.status === 'ok') await this._refreshProjects();
+  },
+
+  // ── Skill group reorder ────────────────────────────────────────────────────
+
+  async moveSkillGroup(idx, direction) {
+    const profile = await this._get('/admin/api/profile');
+    if (!profile || profile.status === 'error') return;
+    const skills = profile.skills || [];
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= skills.length) return;
+    const order = skills.map((_, i) => i);
+    [order[idx], order[newIdx]] = [order[newIdx], order[idx]];
+    const r = await this._post('/admin/api/skills/reorder', { order });
+    if (r.status === 'ok') {
+      profile.skills = order.map(i => skills[i]);
+      this._applySkills(profile);
+    }
+  },
+
   openAddProject() {
     this.openModal('Add Project', this._projectForm(null), 'Add Project',
                    () => this._saveProject(null, true));
@@ -568,13 +642,23 @@ const AdminPanel = {
     if (!grid) return;
     const isAllPage = window.location.pathname === '/projects';
     const list = isAllPage ? projects : projects.slice(0, 3);
-    grid.innerHTML = list.map((p, i) => this._projectCardHTML(i, p)).join('');
+    grid.innerHTML = list.map((p, i) => this._projectCardHTML(i, p, list.length)).join('');
   },
 
-  _projectCardHTML(idx, p) {
+  _projectCardHTML(idx, p, total) {
     const isAdmin = !!document.getElementById('admin-bar');
     const controls = isAdmin ? `
       <div class="card-admin-controls" style="position:absolute;top:12px;right:12px;z-index:10;">
+        <button class="admin-btn admin-btn-small card-move-btn"
+                onclick="AdminPanel.moveProject(${idx}, -1)"
+                title="Move up" ${idx === 0 ? 'disabled' : ''}>
+          <i class="fas fa-chevron-up"></i>
+        </button>
+        <button class="admin-btn admin-btn-small card-move-btn"
+                onclick="AdminPanel.moveProject(${idx}, 1)"
+                title="Move down" ${idx === total - 1 ? 'disabled' : ''}>
+          <i class="fas fa-chevron-down"></i>
+        </button>
         <button class="admin-btn admin-btn-small"
                 onclick="AdminPanel.openEditProject(${idx})">
           <i class="fas fa-pencil-alt"></i> Edit
@@ -614,15 +698,18 @@ const AdminPanel = {
               <span class="cs-psi-label cs-psi-problem">Problem</span>
               <p class="cs-psi-text">${this.esc(p.problem || '')}</p>
             </div>
-            <div class="cs-psi-item">
+            <div class="cs-psi-item cs-psi-collapsible">
               <span class="cs-psi-label cs-psi-solution">Solution</span>
               <p class="cs-psi-text">${this.esc(p.solution || '')}</p>
             </div>
-            <div class="cs-psi-item">
+            <div class="cs-psi-item cs-psi-collapsible">
               <span class="cs-psi-label cs-psi-impact">Impact</span>
               <p class="cs-psi-text">${this.esc(p.impact || '')}</p>
             </div>
           </div>
+          <button class="cs-toggle-btn" onclick="toggleCard(this)" aria-expanded="false">
+            <i class="fas fa-chevron-down"></i> Show more
+          </button>
           <div class="project-tags">${tags}</div>
           <div class="project-links">
             <a href="${this.esc(p.github)}" class="project-link"
@@ -780,16 +867,34 @@ const AdminPanel = {
   _applySkills(p) {
     const grid = document.querySelector('.skills-grid');
     if (!grid) return;
-    grid.innerHTML = (p.skills || []).map(g => `
-      <div class="skill-group">
-        <h3 class="skill-category">
-          <i class="fas ${this.esc(g.icon)}" aria-hidden="true"></i>
-          ${this.esc(g.category)}
-        </h3>
-        <div class="skill-tags">
-          ${(g.tags || []).map(t => `<span class="skill-tag">${this.esc(t)}</span>`).join('')}
-        </div>
-      </div>`).join('');
+    const isAdmin = !!document.getElementById('admin-bar');
+    const skills  = p.skills || [];
+    grid.innerHTML = skills.map((g, i) => {
+      const moveControls = isAdmin ? `
+        <div class="skill-group-move-controls">
+          <button class="admin-btn admin-btn-small card-move-btn"
+                  onclick="AdminPanel.moveSkillGroup(${i}, -1)"
+                  title="Move left" ${i === 0 ? 'disabled' : ''}>
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button class="admin-btn admin-btn-small card-move-btn"
+                  onclick="AdminPanel.moveSkillGroup(${i}, 1)"
+                  title="Move right" ${i === skills.length - 1 ? 'disabled' : ''}>
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>` : '';
+      return `
+        <div class="skill-group" data-idx="${i}">
+          ${moveControls}
+          <h3 class="skill-category">
+            <i class="fas ${this.esc(g.icon)}" aria-hidden="true"></i>
+            ${this.esc(g.category)}
+          </h3>
+          <div class="skill-tags">
+            ${(g.tags || []).map(t => `<span class="skill-tag">${this.esc(t)}</span>`).join('')}
+          </div>
+        </div>`;
+    }).join('');
   },
 
   _applyContact(p) {
@@ -826,6 +931,18 @@ const AdminPanel = {
   },
 
 };
+
+
+// ── Card collapse toggle ───────────────────────────────────────────────────
+
+function toggleCard(btn) {
+  const card     = btn.closest('.case-study-card');
+  const expanded = card.classList.toggle('cs-expanded');
+  btn.setAttribute('aria-expanded', expanded);
+  btn.innerHTML  = expanded
+    ? '<i class="fas fa-chevron-up"></i> Show less'
+    : '<i class="fas fa-chevron-down"></i> Show more';
+}
 
 
 // ── Keyboard shortcuts ─────────────────────────────────────────────────────

@@ -708,6 +708,61 @@ ul { list-style: none; }
   line-height: 1.65;
 }
 
+/* ── Card collapse ── */
+.cs-psi-collapsible { display: none; }
+.case-study-card.cs-expanded .cs-psi-collapsible { display: flex; }
+
+.cs-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--accent);
+  padding: 0.3rem 0.9rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  width: 100%;
+}
+.cs-toggle-btn:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* ── Card reorder move buttons (admin only) ── */
+.card-move-btn { opacity: 0.7; }
+.card-move-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+.card-move-btn:not(:disabled):hover { opacity: 1; }
+
+/* ── Skill group move controls ── */
+.skill-group { position: relative; }
+.skill-group-move-controls {
+  display: none;
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  gap: 0.25rem;
+  z-index: 5;
+}
+.admin-active .skill-group-move-controls { display: flex; }
+
+/* ── Download CV button ── */
+.cv-download-btn {
+  background: transparent;
+  border: 2px solid var(--accent);
+  color: var(--accent);
+}
+.cv-download-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
 /* ── Tags & links (shared) ── */
 .project-tags {
   display: flex;

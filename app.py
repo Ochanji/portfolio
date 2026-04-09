@@ -52,6 +52,7 @@ app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024   # 5 MB upload limit
 DATA_DIR   = os.path.join(os.path.dirname(__file__), "data")
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "static", "uploads")
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
+ALLOWED_CV_EXTENSIONS = {"pdf", "doc", "docx"}
 
 
 # ── Template filter ────────────────────────────────────────────────────────────
@@ -88,6 +89,10 @@ def save_data(filename: str, data) -> None:
 
 def allowed_file(filename: str) -> bool:
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def allowed_cv(filename: str) -> bool:
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_CV_EXTENSIONS
 
 
 # ── Auth decorators ────────────────────────────────────────────────────────────
@@ -149,7 +154,11 @@ def contact():
         return jsonify({"status": "error", "message": "All fields are required."}), 400
 
     to_email = os.getenv("CONTACT_TO_EMAIL", "")
-    if resend.api_key and to_email:
+    if not resend.api_key:
+        print("[Contact] WARNING: RESEND_API_KEY is not set — email not sent.")
+    elif not to_email:
+        print("[Contact] WARNING: CONTACT_TO_EMAIL is not set — email not sent.")
+    else:
         try:
             safe_name    = html.escape(name)
             safe_email   = html.escape(email)
@@ -238,6 +247,52 @@ def admin_api_upload():
     return jsonify({"status": "ok", "url": f"/static/uploads/{filename}"})
 
 
+# ── Admin API: CV upload ───────────────────────────────────────────────────────
+
+
+@app.route("/admin/api/cv", methods=["POST"])
+@admin_required_json
+def admin_api_cv():
+    if "file" not in request.files:
+        return jsonify({"status": "error", "message": "No file provided."}), 400
+
+    file = request.files["file"]
+    if not file or file.filename == "" or not allowed_cv(file.filename):
+        return jsonify({
+            "status": "error",
+            "message": "Invalid file type. Use PDF, DOC, or DOCX.",
+        }), 400
+
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    ext      = file.filename.rsplit(".", 1)[1].lower()
+    filename = f"cv.{ext}"
+    file.save(os.path.join(UPLOAD_DIR, filename))
+
+    url     = f"/static/uploads/{filename}"
+    profile = load_data("profile.json")
+    profile["cv_url"] = url
+    save_data("profile.json", profile)
+
+    return jsonify({"status": "ok", "url": url})
+
+
+@app.route("/admin/api/cv", methods=["DELETE"])
+@admin_required_json
+def admin_api_cv_delete():
+    profile = load_data("profile.json")
+    old_url = profile.pop("cv_url", None)
+    save_data("profile.json", profile)
+
+    if old_url:
+        old_path = os.path.join(os.path.dirname(__file__), old_url.lstrip("/"))
+        try:
+            os.remove(old_path)
+        except OSError:
+            pass
+
+    return jsonify({"status": "ok"})
+
+
 # ── Admin API: projects ────────────────────────────────────────────────────────
 
 
@@ -280,6 +335,18 @@ def admin_api_projects():
     projects.append(project)
     save_data("projects.json", projects)
     return jsonify({"status": "ok", "idx": len(projects) - 1, "project": project})
+
+
+@app.route("/admin/api/projects/reorder", methods=["POST"])
+@admin_required_json
+def admin_api_projects_reorder():
+    data     = request.get_json() or {}
+    order    = data.get("order", [])
+    projects = load_data("projects.json")
+    if not isinstance(order, list) or sorted(order) != list(range(len(projects))):
+        return jsonify({"status": "error", "message": "Invalid order."}), 400
+    save_data("projects.json", [projects[i] for i in order])
+    return jsonify({"status": "ok"})
 
 
 @app.route("/admin/api/projects/<int:idx>", methods=["PUT", "DELETE"])
@@ -340,6 +407,23 @@ def admin_api_experience_item(idx):
     experience[idx] = _build_experience(request.get_json() or {})
     save_data("experience.json", experience)
     return jsonify({"status": "ok", "entry": experience[idx]})
+
+
+# ── Admin API: skills reorder ─────────────────────────────────────────────────
+
+
+@app.route("/admin/api/skills/reorder", methods=["POST"])
+@admin_required_json
+def admin_api_skills_reorder():
+    data    = request.get_json() or {}
+    order   = data.get("order", [])
+    profile = load_data("profile.json")
+    skills  = profile.get("skills", [])
+    if not isinstance(order, list) or sorted(order) != list(range(len(skills))):
+        return jsonify({"status": "error", "message": "Invalid order."}), 400
+    profile["skills"] = [skills[i] for i in order]
+    save_data("profile.json", profile)
+    return jsonify({"status": "ok"})
 
 
 # ── Legacy admin routes ────────────────────────────────────────────────────────

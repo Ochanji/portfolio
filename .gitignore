@@ -21,3 +21,8 @@ Thumbs.db
 
 # Uploaded media (not tracked in git — persists on server only)
 static/uploads/
+
+# Live data files — edited via admin panel, must NOT be overwritten on git pull.
+# On a fresh clone, these files won't exist; the app falls back to empty defaults
+# and you populate them through the admin UI.
+data/*.json

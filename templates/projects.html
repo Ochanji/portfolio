@@ -19,6 +19,16 @@
 
         {% if session.admin_logged_in %}
         <div class="card-admin-controls" style="position:absolute;top:12px;right:12px;z-index:10;">
+          <button class="admin-btn admin-btn-small card-move-btn"
+                  onclick="AdminPanel.moveProject({{ loop.index0 }}, -1)"
+                  title="Move up" {% if loop.first %}disabled{% endif %}>
+            <i class="fas fa-chevron-up"></i>
+          </button>
+          <button class="admin-btn admin-btn-small card-move-btn"
+                  onclick="AdminPanel.moveProject({{ loop.index0 }}, 1)"
+                  title="Move down" {% if loop.last %}disabled{% endif %}>
+            <i class="fas fa-chevron-down"></i>
+          </button>
           <button class="admin-btn admin-btn-small"
                   onclick="AdminPanel.openEditProject({{ loop.index0 }})">
             <i class="fas fa-pencil-alt"></i> Edit
@@ -57,15 +67,19 @@
               <span class="cs-psi-label cs-psi-problem">Problem</span>
               <p class="cs-psi-text">{{ project.problem }}</p>
             </div>
-            <div class="cs-psi-item">
+            <div class="cs-psi-item cs-psi-collapsible">
               <span class="cs-psi-label cs-psi-solution">Solution</span>
               <p class="cs-psi-text">{{ project.solution }}</p>
             </div>
-            <div class="cs-psi-item">
+            <div class="cs-psi-item cs-psi-collapsible">
               <span class="cs-psi-label cs-psi-impact">Impact</span>
               <p class="cs-psi-text">{{ project.impact }}</p>
             </div>
           </div>
+
+          <button class="cs-toggle-btn" onclick="toggleCard(this)" aria-expanded="false">
+            <i class="fas fa-chevron-down"></i> Show more
+          </button>
 
           <div class="project-tags">
             {% for tag in project.tags %}
