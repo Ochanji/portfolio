@@ -449,8 +449,8 @@ ul { list-style: none; }
 }
 
 .avatar-initials {
-  width: 160px;
-  height: 160px;
+  width: 220px;
+  height: 220px;
   border-radius: 50%;
   background: var(--bg-card);
   border: 3px solid var(--accent);
@@ -1561,12 +1561,13 @@ body.admin-edit-mode section[data-section] {
 
 /* When a real photo is set — circular, same size as the initials placeholder */
 .avatar-photo {
-  width: 160px;
-  height: 160px;
+  width: 220px;
+  height: 220px;
   border-radius: 50%;
   object-fit: cover;
+  object-position: center top; /* keep face centred when cropping tight */
   border: 3px solid var(--accent);
-  box-shadow: 0 0 40px rgba(59, 130, 246, 0.15);
+  box-shadow: 0 0 50px rgba(59, 130, 246, 0.25);
   display: block;
 }
 
