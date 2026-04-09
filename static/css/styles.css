@@ -559,7 +559,7 @@ ul { list-style: none; }
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: 2rem;
-  align-items: start;
+  align-items: stretch; /* cards in the same row are always equal height */
 }
 
 /* ── Case study card shell ── */
@@ -679,6 +679,10 @@ ul { list-style: none; }
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* ── Problem / Solution / Impact ── */
@@ -744,6 +748,16 @@ ul { list-style: none; }
   border-color: var(--accent);
   color: #fff;
 }
+
+/* ── Drag-to-reorder (SortableJS) ── */
+.sortable-ghost  { opacity: 0.3; }
+.sortable-chosen { box-shadow: 0 0 0 2px var(--accent); }
+.admin-active .projects-grid,
+.admin-active .skills-grid { cursor: grab; }
+.admin-active .projects-grid *,
+.admin-active .skills-grid * { cursor: auto; }
+.admin-active .projects-grid .case-study-card,
+.admin-active .skills-grid .skill-group { cursor: grab; }
 
 /* ── Card reorder move buttons (admin only) ── */
 .card-move-btn { opacity: 0.7; }

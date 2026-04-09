@@ -933,6 +933,50 @@ const AdminPanel = {
 };
 
 
+// ── Drag-to-reorder (SortableJS) ──────────────────────────────────────────
+
+function initSortable() {
+  if (typeof Sortable === 'undefined') return;
+
+  // Projects grid — only when admin bar is present
+  const projGrid = document.querySelector('.projects-grid');
+  if (projGrid && document.getElementById('admin-bar')) {
+    Sortable.create(projGrid, {
+      animation: 180,
+      ghostClass: 'sortable-ghost',
+      chosenClass: 'sortable-chosen',
+      onEnd: async function () {
+        const cards  = [...projGrid.querySelectorAll('.case-study-card')];
+        const order  = cards.map(c => parseInt(c.dataset.idx));
+        const r      = await AdminPanel._post('/admin/api/projects/reorder', { order });
+        if (r.status === 'ok') await AdminPanel._refreshProjects();
+      },
+    });
+  }
+
+  // Skills grid
+  const skillGrid = document.querySelector('.skills-grid');
+  if (skillGrid && document.getElementById('admin-bar')) {
+    Sortable.create(skillGrid, {
+      animation: 180,
+      ghostClass: 'sortable-ghost',
+      chosenClass: 'sortable-chosen',
+      onEnd: async function () {
+        const groups = [...skillGrid.querySelectorAll('.skill-group')];
+        const order  = groups.map(g => parseInt(g.dataset.idx));
+        const r      = await AdminPanel._post('/admin/api/skills/reorder', { order });
+        if (r.status === 'ok') {
+          const profile = await AdminPanel._get('/admin/api/profile');
+          if (profile && !profile.status) AdminPanel._applySkills(profile);
+        }
+      },
+    });
+  }
+}
+
+document.addEventListener('DOMContentLoaded', initSortable);
+
+
 // ── Card collapse toggle ───────────────────────────────────────────────────
 
 function toggleCard(btn) {
