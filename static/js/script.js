@@ -16,12 +16,17 @@
 /* ── 1. THEME TOGGLE ──────────────────────────────────────────────────────── */
 
 (function initTheme() {
-  /**
-   * Read the saved preference from localStorage.
-   * If no preference exists, default to "dark" (matches the CSS :root variables).
-   */
-  const saved = localStorage.getItem('theme') || 'dark';
-  applyTheme(saved);
+  // Use saved manual override if present; otherwise follow the OS preference.
+  const saved  = localStorage.getItem('theme');
+  const system = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  applyTheme(saved || system);
+
+  // If the user hasn't set a manual override, track OS changes in real time.
+  window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e => {
+    if (!localStorage.getItem('theme')) {
+      applyTheme(e.matches ? 'light' : 'dark');
+    }
+  });
 })();
 
 /**
