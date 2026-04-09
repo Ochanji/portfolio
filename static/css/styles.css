@@ -709,8 +709,18 @@ ul { list-style: none; }
 }
 
 /* ── Card collapse ── */
-.cs-psi-collapsible { display: none; }
-.case-study-card.cs-expanded .cs-psi-collapsible { display: flex; }
+/* All 3 sections always visible; text is clamped to 2 lines when collapsed */
+.case-study-card:not(.cs-expanded) .cs-psi-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.case-study-card.cs-expanded .cs-psi-text {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
 
 .cs-toggle-btn {
   display: inline-flex;
