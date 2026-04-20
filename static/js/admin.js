@@ -565,11 +565,19 @@ const AdminPanel = {
         <input type="text" id="m-proj-tags" value="${this.esc((p?.tags || []).join(', '))}">
       </div>
       <div class="form-group">
-        <label>GitHub URL</label>
+        <label>GitHub URL <small style="color:var(--text-muted)">(leave blank to hide button)</small></label>
         <input type="url" id="m-proj-github" placeholder="https://github.com/…"
                value="${this.esc(p?.github ?? '')}">
       </div>
       <div class="form-group">
+        <label>Demo</label>
+        <select id="m-proj-demo-type" onchange="AdminPanel.toggleDemoUrl()">
+          <option value=""     ${(p?.demo_type ?? '') === ''     ? 'selected' : ''}>Request demo (contact form)</option>
+          <option value="live" ${(p?.demo_type ?? (p?.demo && p?.demo !== '#' ? 'live' : '')) === 'live' ? 'selected' : ''}>Live demo (URL)</option>
+        </select>
+      </div>
+      <div class="form-group" id="m-proj-demo-url-group"
+           style="display:${(p?.demo_type === 'live' || (!p?.demo_type && p?.demo && p?.demo !== '#')) ? 'block' : 'none'}">
         <label>Live Demo URL</label>
         <input type="url" id="m-proj-demo" placeholder="https://…"
                value="${this.esc(p?.demo ?? '')}">
@@ -588,6 +596,12 @@ const AdminPanel = {
           <i class="fas fa-times"></i>
         </button>
       </div>`;
+  },
+
+  toggleDemoUrl() {
+    const type = document.getElementById('m-proj-demo-type')?.value;
+    const group = document.getElementById('m-proj-demo-url-group');
+    if (group) group.style.display = type === 'live' ? 'block' : 'none';
   },
 
   addMetricRow() {
@@ -614,10 +628,13 @@ const AdminPanel = {
       solution: document.getElementById('m-proj-solution').value.trim(),
       impact:   document.getElementById('m-proj-impact').value.trim(),
       metrics,
-      tags:     document.getElementById('m-proj-tags').value,
-      github:   document.getElementById('m-proj-github').value.trim(),
-      demo:     document.getElementById('m-proj-demo').value.trim(),
-      image:    document.getElementById('m-proj-image-url').value.trim(),
+      tags:      document.getElementById('m-proj-tags').value,
+      github:    document.getElementById('m-proj-github').value.trim(),
+      demo_type: document.getElementById('m-proj-demo-type').value,
+      demo:      (document.getElementById('m-proj-demo-type').value === 'live'
+                   ? document.getElementById('m-proj-demo')?.value.trim()
+                   : '') || '',
+      image:     document.getElementById('m-proj-image-url').value.trim(),
     };
 
     const r = isNew
@@ -712,14 +729,10 @@ const AdminPanel = {
           </button>
           <div class="project-tags">${tags}</div>
           <div class="project-links">
-            <a href="${this.esc(p.github)}" class="project-link"
-               target="_blank" rel="noopener noreferrer">
-              <i class="fab fa-github"></i> GitHub
-            </a>
-            <a href="${this.esc(p.demo)}" class="project-link demo"
-               target="_blank" rel="noopener noreferrer">
-              <i class="fas fa-external-link-alt"></i> Live Demo
-            </a>
+            ${p.github && p.github !== '#' ? `<a href="${this.esc(p.github)}" class="project-link" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i> GitHub</a>` : ''}
+            ${p.demo_type === 'live' && p.demo && p.demo !== '#'
+              ? `<a href="${this.esc(p.demo)}" class="project-link demo" target="_blank" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i> Live Demo</a>`
+              : `<a href="/#contact" class="project-link ask-demo"><i class="fas fa-envelope"></i> Request Demo</a>`}
           </div>
         </div>
       </article>`;

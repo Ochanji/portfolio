@@ -318,9 +318,10 @@ def _build_project(data: dict) -> dict:
         "impact":   data.get("impact",   "").strip(),
         "metrics":  metrics,
         "tags":     tags,
-        "github":   data.get("github", "#").strip() or "#",
-        "demo":     data.get("demo",   "#").strip() or "#",
-        "image":    data.get("image",  "") or "",
+        "github":    data.get("github", "").strip(),
+        "demo":      data.get("demo",   "").strip(),
+        "demo_type": data.get("demo_type", "").strip(),
+        "image":     data.get("image",  "") or "",
     }
 
 
