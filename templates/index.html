@@ -150,7 +150,7 @@
     <p class="section-subtitle">A selection of work — building data systems that matter.</p>
 
     <div class="projects-grid">
-      {% for project in projects[:3] %}
+      {% for project in projects[:4] %}
       <article class="case-study-card" data-idx="{{ loop.index0 }}">
 
         {% if session.admin_logged_in %}
@@ -227,14 +227,22 @@
           </div>
 
           <div class="project-links">
+            {% if project.github and project.github != '#' %}
             <a href="{{ project.github }}" class="project-link"
                target="_blank" rel="noopener noreferrer">
               <i class="fab fa-github" aria-hidden="true"></i> GitHub
             </a>
+            {% endif %}
+            {% if project.get('demo_type') == 'live' and project.demo and project.demo != '#' %}
             <a href="{{ project.demo }}" class="project-link demo"
                target="_blank" rel="noopener noreferrer">
               <i class="fas fa-external-link-alt" aria-hidden="true"></i> Live Demo
             </a>
+            {% else %}
+            <a href="/#contact" class="project-link ask-demo">
+              <i class="fas fa-envelope" aria-hidden="true"></i> Request Demo
+            </a>
+            {% endif %}
           </div>
         </div>
 
