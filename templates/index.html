@@ -152,9 +152,10 @@
     <div class="projects-grid">
       {% for project in projects[:4] %}
       <article class="case-study-card" data-idx="{{ loop.index0 }}">
+        {% set project_idx = loop.index0 %}
 
         {% if session.admin_logged_in %}
-        <div class="card-admin-controls" style="position:absolute;top:12px;right:12px;z-index:10;">
+        <div class="card-admin-controls project-card-controls">
           <button class="admin-btn admin-btn-small card-move-btn"
                   onclick="AdminPanel.moveProject({{ loop.index0 }}, -1)"
                   title="Move up" {% if loop.first %}disabled{% endif %}>
@@ -233,6 +234,38 @@
               <i class="fab fa-github" aria-hidden="true"></i> GitHub
             </a>
             {% endif %}
+            {% set files = project.get('attachments', []) | selectattr('url') | list %}
+            {% if files %}
+            <div class="project-attachments">
+              <button class="project-link attachments-btn" onclick="toggleAttachments(this)" type="button">
+                <i class="fas fa-paperclip" aria-hidden="true"></i>
+                View Files&nbsp;<span class="att-count">({{ files|length }})</span>
+              </button>
+              <div class="attachments-panel">
+                {% for att in files %}
+                <div class="attachment-item">
+                  {% if att.type == 'pdf' %}
+                  <a href="{{ att.url }}" class="attachment-open" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-pdf"></i> {{ att.name }}
+                  </a>
+                  {% else %}
+                  <span class="attachment-open attachment-img" data-src="{{ att.url }}" data-alt="{{ att.name }}" role="button" tabindex="0">
+                    <i class="fas fa-image"></i> {{ att.name }}
+                  </span>
+                  {% endif %}
+                  {% if session.admin_logged_in %}
+                  <button class="attachment-delete"
+                          type="button"
+                          title="Delete file from this project"
+                          onclick="AdminPanel.deleteProjectAttachment({{ project_idx }}, '{{ att.url }}')">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                  {% endif %}
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
             {% if project.get('demo_type') == 'live' and project.demo and project.demo != '#' %}
             <a href="{{ project.demo }}" class="project-link demo"
                target="_blank" rel="noopener noreferrer">
@@ -245,28 +278,6 @@
             {% endif %}
           </div>
 
-          {% set files = project.get('attachments', []) | selectattr('url') | list %}
-          {% if files %}
-          <div class="project-attachments">
-            <button class="project-link attachments-btn" onclick="toggleAttachments(this)" type="button">
-              <i class="fas fa-paperclip" aria-hidden="true"></i>
-              View Files&nbsp;<span class="att-count">({{ files|length }})</span>
-            </button>
-            <div class="attachments-panel">
-              {% for att in files %}
-              {% if att.type == 'pdf' %}
-              <a href="{{ att.url }}" class="attachment-item" target="_blank" rel="noopener noreferrer">
-                <i class="fas fa-file-pdf"></i> {{ att.name }}
-              </a>
-              {% else %}
-              <span class="attachment-item attachment-img" data-src="{{ att.url }}" data-alt="{{ att.name }}" role="button" tabindex="0">
-                <i class="fas fa-image"></i> {{ att.name }}
-              </span>
-              {% endif %}
-              {% endfor %}
-            </div>
-          </div>
-          {% endif %}
         </div>
 
       </article>

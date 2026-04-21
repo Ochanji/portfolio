@@ -847,19 +847,21 @@ ul { list-style: none; }
   font-weight: 600;
 }
 
-.project-links { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.project-links { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: flex-start; }
 
 .project-link {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.4rem 0.9rem;
+  padding: 0.34rem 0.72rem;
   border-radius: 0.4rem;
-  font-size: 0.8rem;
+  font-size: 0.74rem;
   font-weight: 600;
   border: 1px solid var(--border);
   color: var(--text-muted);
   transition: border-color 0.2s, color 0.2s, background 0.2s;
+  line-height: 1.1;
+  white-space: nowrap;
 }
 .project-link:hover {
   border-color: var(--accent);
@@ -877,7 +879,7 @@ ul { list-style: none; }
 /* Attachments: public project card */
 .project-attachments {
   position: relative;
-  margin-top: 0.65rem;
+  margin-top: 0;
 }
 .project-link.attachments-btn {
   border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
@@ -897,7 +899,9 @@ ul { list-style: none; }
 .attachments-panel {
   display: none;
   position: static;
-  width: 100%;
+  width: max-content;
+  min-width: min(300px, 88vw);
+  max-width: min(360px, 92vw);
   flex-direction: column;
   gap: 0.35rem;
   margin-top: 0.55rem;
@@ -920,7 +924,7 @@ ul { list-style: none; }
   border: 1px solid transparent;
   transition: border-color 0.18s, background 0.18s, color 0.18s;
   text-decoration: none;
-  cursor: pointer;
+  cursor: default;
 }
 .project-attachments .attachment-item:hover,
 .project-attachments .attachment-item:focus-visible {
@@ -929,6 +933,22 @@ ul { list-style: none; }
   color: var(--text-primary);
   outline: none;
 }
+.project-attachments .attachment-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: inherit;
+  text-decoration: none;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.project-attachments .attachment-open.attachment-img {
+  cursor: zoom-in;
+}
 .project-attachments .attachment-item i {
   width: 1rem;
   text-align: center;
@@ -936,6 +956,25 @@ ul { list-style: none; }
 }
 .project-attachments .attachment-item i.fa-file-pdf { color: #ef4444; }
 .project-attachments .attachment-item i.fa-image { color: var(--accent); }
+.project-attachments .attachment-delete {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 0.4rem;
+  font-size: 0.72rem;
+  width: 1.8rem;
+  height: 1.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.18s, color 0.18s, background 0.18s;
+}
+.project-attachments .attachment-delete:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: rgba(239,68,68,0.08);
+}
 
 /* Attachments: admin modal */
 #attachments-list {
@@ -1581,6 +1620,19 @@ body.admin-edit-mode .section-admin-bar {
   gap: 0.4rem;
   justify-content: flex-end;
   margin-bottom: 0.75rem;
+}
+
+/* Project cards: keep controls on their own row above the image area in edit mode */
+.case-study-card > .project-card-controls {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-secondary) 82%, #000 18%);
+  position: relative;
+  z-index: 2;
+}
+.case-study-card > .project-card-controls .admin-btn {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 body.admin-edit-mode .card-admin-controls {
