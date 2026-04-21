@@ -293,6 +293,59 @@ def admin_api_cv_delete():
     return jsonify({"status": "ok"})
 
 
+# ── Admin API: project attachment upload ──────────────────────────────────────
+
+
+@app.route("/admin/api/upload/attachment", methods=["POST"])
+@admin_required_json
+def admin_api_upload_attachment():
+    if "file" not in request.files:
+        return jsonify({"status": "error", "message": "No file provided."}), 400
+
+    file = request.files["file"]
+    ALLOWED_ATTACH = {"png", "jpg", "jpeg", "gif", "webp", "pdf"}
+    if not file or file.filename == "" or not (
+        "." in file.filename and file.filename.rsplit(".", 1)[1].lower() in ALLOWED_ATTACH
+    ):
+        return jsonify({"status": "error", "message": "Invalid file type. Use PDF or an image."}), 400
+
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    ext      = file.filename.rsplit(".", 1)[1].lower()
+    filename = f"{uuid.uuid4().hex}.{ext}"
+    file.save(os.path.join(UPLOAD_DIR, filename))
+
+    file_type = "pdf" if ext == "pdf" else "image"
+    return jsonify({
+        "status": "ok",
+        "url":    f"/static/uploads/{filename}",
+        "type":   file_type,
+        "name":   file.filename,
+    })
+
+
+# ── Admin API: project attachment delete ──────────────────────────────────────
+
+
+@app.route("/admin/api/attachments/<path:url>", methods=["DELETE"])
+@admin_required_json
+def admin_api_delete_attachment(url):
+    # Accept either full encoded URL (/static/uploads/...) or plain filename.
+    decoded = url.replace("%2F", "/")
+    filename = secure_filename(decoded.split("/")[-1])
+    if not filename:
+        return jsonify({"status": "error", "message": "Invalid file."}), 400
+    filepath = os.path.join(UPLOAD_DIR, filename)
+    
+    try:
+        if os.path.exists(filepath):
+            os.remove(filepath)
+            return jsonify({"status": "ok"})
+        else:
+            return jsonify({"status": "error", "message": "File not found"}), 404
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 # ── Admin API: projects ────────────────────────────────────────────────────────
 
 
@@ -310,18 +363,31 @@ def _build_project(data: dict) -> dict:
         {"value": str(m.get("value", "")).strip(), "label": str(m.get("label", "")).strip()}
         for m in raw_metrics if isinstance(m, dict)
     ]
+    # Attachments: list of {name, url, type}
+    raw_attachments = data.get("attachments", [])
+    if isinstance(raw_attachments, str):
+        try:
+            import json as _json2
+            raw_attachments = _json2.loads(raw_attachments)
+        except Exception:
+            raw_attachments = []
+    attachments = [
+        {"name": str(a.get("name", "")).strip(), "url": str(a.get("url", "")).strip(), "type": str(a.get("type", "image")).strip()}
+        for a in raw_attachments if isinstance(a, dict) and a.get("url")
+    ]
     return {
-        "title":    data.get("title",    "").strip(),
-        "tagline":  data.get("tagline",  "").strip(),
-        "problem":  data.get("problem",  "").strip(),
-        "solution": data.get("solution", "").strip(),
-        "impact":   data.get("impact",   "").strip(),
-        "metrics":  metrics,
-        "tags":     tags,
-        "github":    data.get("github", "").strip(),
-        "demo":      data.get("demo",   "").strip(),
-        "demo_type": data.get("demo_type", "").strip(),
-        "image":     data.get("image",  "") or "",
+        "title":       data.get("title",    "").strip(),
+        "tagline":     data.get("tagline",  "").strip(),
+        "problem":     data.get("problem",  "").strip(),
+        "solution":    data.get("solution", "").strip(),
+        "impact":      data.get("impact",   "").strip(),
+        "metrics":     metrics,
+        "tags":        tags,
+        "github":      data.get("github", "").strip(),
+        "demo":        data.get("demo",   "").strip(),
+        "demo_type":   data.get("demo_type", "").strip(),
+        "image":       data.get("image",  "") or "",
+        "attachments": attachments,
     }
 
 

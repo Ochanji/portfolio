@@ -105,6 +105,29 @@
             </a>
             {% endif %}
           </div>
+
+          {% set files = project.get('attachments', []) | selectattr('url') | list %}
+          {% if files %}
+          <div class="project-attachments">
+            <button class="project-link attachments-btn" onclick="toggleAttachments(this)" type="button">
+              <i class="fas fa-paperclip" aria-hidden="true"></i>
+              View Files&nbsp;<span class="att-count">({{ files|length }})</span>
+            </button>
+            <div class="attachments-panel">
+              {% for att in files %}
+              {% if att.type == 'pdf' %}
+              <a href="{{ att.url }}" class="attachment-item" target="_blank" rel="noopener noreferrer">
+                <i class="fas fa-file-pdf"></i> {{ att.name }}
+              </a>
+              {% else %}
+              <span class="attachment-item attachment-img" data-src="{{ att.url }}" data-alt="{{ att.name }}" role="button" tabindex="0">
+                <i class="fas fa-image"></i> {{ att.name }}
+              </span>
+              {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
         </div>
 
       </article>

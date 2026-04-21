@@ -1,4 +1,4 @@
-/**
+﻿/**
  * script.js — Vincent Ochanji Portfolio
  * =======================================
  * Responsibilities:
@@ -272,6 +272,14 @@ if (navbar) {
 
   // Open on click of any zoomable image or project card header
   document.addEventListener('click', function (e) {
+    const attachmentImg = e.target.closest('.attachment-img');
+    if (attachmentImg) {
+      const src = attachmentImg.getAttribute('data-src');
+      const alt = attachmentImg.getAttribute('data-alt') || '';
+      if (src) openLightbox(src, alt);
+      return;
+    }
+
     // Direct image click
     const img = e.target.closest('.cs-header-img, .avatar-photo');
     if (img) { openLightbox(img.src, img.alt); return; }
@@ -290,5 +298,11 @@ if (navbar) {
   });
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && lb.classList.contains('lb-open')) closeLightbox();
+    if ((e.key === 'Enter' || e.key === ' ') && document.activeElement?.classList?.contains('attachment-img')) {
+      e.preventDefault();
+      const src = document.activeElement.getAttribute('data-src');
+      const alt = document.activeElement.getAttribute('data-alt') || '';
+      if (src) openLightbox(src, alt);
+    }
   });
 })();
