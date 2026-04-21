@@ -337,11 +337,33 @@ def admin_api_delete_attachment(url):
     filepath = os.path.join(UPLOAD_DIR, filename)
     
     try:
+        deleted = False
         if os.path.exists(filepath):
             os.remove(filepath)
-            return jsonify({"status": "ok"})
-        else:
-            return jsonify({"status": "error", "message": "File not found"}), 404
+            deleted = True
+
+        # Remove any references to this file from projects attachments.
+        file_url = f"/static/uploads/{filename}"
+        projects = load_data("projects.json")
+        changed = False
+        for project in projects:
+            attachments = project.get("attachments", [])
+            if not isinstance(attachments, list):
+                continue
+            filtered = [
+                a for a in attachments
+                if not (isinstance(a, dict) and str(a.get("url", "")).strip() == file_url)
+            ]
+            if len(filtered) != len(attachments):
+                project["attachments"] = filtered
+                changed = True
+
+        if changed:
+            save_data("projects.json", projects)
+
+        if deleted:
+            return jsonify({"status": "ok", "message": "File deleted."})
+        return jsonify({"status": "error", "message": "File not found"}), 404
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 

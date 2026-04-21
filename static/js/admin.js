@@ -744,6 +744,50 @@ const AdminPanel = {
     await this._refreshProjects();
   },
 
+  async deleteProjectAttachment(projectIdx, url) {
+    if (!confirm('Delete this file from the project?')) return;
+
+    const projects = await this._get('/admin/api/projects');
+    if (!Array.isArray(projects) || !projects[projectIdx]) {
+      this._modalError('Could not load project files.');
+      return;
+    }
+
+    const project = projects[projectIdx];
+    const current = Array.isArray(project.attachments) ? project.attachments : [];
+    const nextAttachments = current.filter(att => att?.url !== url);
+    if (nextAttachments.length === current.length) return;
+
+    const payload = {
+      title: String(project.title || ''),
+      tagline: String(project.tagline || ''),
+      problem: String(project.problem || ''),
+      solution: String(project.solution || ''),
+      impact: String(project.impact || ''),
+      metrics: Array.isArray(project.metrics) ? project.metrics : [],
+      tags: Array.isArray(project.tags) ? project.tags.join(', ') : String(project.tags || ''),
+      github: String(project.github || ''),
+      demo_type: String(project.demo_type || ''),
+      demo: String(project.demo || ''),
+      image: String(project.image || ''),
+      attachments: nextAttachments,
+    };
+    const r = await this._put(`/admin/api/projects/${projectIdx}`, payload);
+    if (r.status !== 'ok') {
+      this._modalError(r.message || 'Failed to delete file.');
+      return;
+    }
+
+    const usedElsewhere = projects.some((p, i) =>
+      i !== projectIdx && (p.attachments || []).some(att => att?.url === url)
+    );
+    if (!usedElsewhere && String(url || '').startsWith('/static/uploads/')) {
+      await this._delete(`/admin/api/attachments/${encodeURIComponent(url)}`);
+    }
+
+    await this._refreshProjects();
+  },
+
   async deleteProject(idx) {
     if (!confirm('Delete this project? This cannot be undone.')) return;
     const r = await this._delete(`/admin/api/projects/${idx}`);
@@ -763,7 +807,7 @@ const AdminPanel = {
   _projectCardHTML(idx, p, total) {
     const isAdmin = !!document.getElementById('admin-bar');
     const controls = isAdmin ? `
-      <div class="card-admin-controls" style="position:absolute;top:12px;right:12px;z-index:10;">
+      <div class="card-admin-controls project-card-controls">
         <button class="admin-btn admin-btn-small card-move-btn"
                 onclick="AdminPanel.moveProject(${idx}, -1)"
                 title="Move up" ${idx === 0 ? 'disabled' : ''}>
@@ -806,15 +850,21 @@ const AdminPanel = {
             View Files&nbsp;<span class="att-count">(${attachmentFiles.length})</span>
           </button>
           <div class="attachments-panel">
-            ${attachmentFiles.map(att => (
-              att.type === 'pdf'
-                ? `<a href="${this.esc(att.url)}" class="attachment-item" target="_blank" rel="noopener noreferrer">
-                    <i class="fas fa-file-pdf"></i> ${this.esc(att.name)}
-                  </a>`
-                : `<span class="attachment-item attachment-img" data-src="${this.esc(att.url)}" data-alt="${this.esc(att.name)}" role="button" tabindex="0">
-                    <i class="fas fa-image"></i> ${this.esc(att.name)}
-                  </span>`
-            )).join('')}
+            ${attachmentFiles.map(att => `
+              <div class="attachment-item">
+                ${att.type === 'pdf'
+                  ? `<a href="${this.esc(att.url)}" class="attachment-open" target="_blank" rel="noopener noreferrer">
+                      <i class="fas fa-file-pdf"></i> ${this.esc(att.name)}
+                    </a>`
+                  : `<span class="attachment-open attachment-img" data-src="${this.esc(att.url)}" data-alt="${this.esc(att.name)}" role="button" tabindex="0">
+                      <i class="fas fa-image"></i> ${this.esc(att.name)}
+                    </span>`}
+                ${isAdmin ? `<button class="attachment-delete" type="button"
+                                title="Delete file from this project"
+                                onclick="AdminPanel.deleteProjectAttachment(${idx}, '${this.esc(att.url)}')">
+                          <i class="fas fa-trash"></i>
+                        </button>` : ''}
+              </div>`).join('')}
           </div>
         </div>` : '';
 
@@ -847,11 +897,11 @@ const AdminPanel = {
           <div class="project-tags">${tags}</div>
           <div class="project-links">
             ${p.github && p.github !== '#' ? `<a href="${this.esc(p.github)}" class="project-link" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i> GitHub</a>` : ''}
+            ${attachmentsHTML}
             ${p.demo_type === 'live' && p.demo && p.demo !== '#'
               ? `<a href="${this.esc(p.demo)}" class="project-link demo" target="_blank" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i> Live Demo</a>`
               : `<a href="/#contact" class="project-link ask-demo"><i class="fas fa-envelope"></i> Request Demo</a>`}
           </div>
-          ${attachmentsHTML}
         </div>
       </article>`;
   },
