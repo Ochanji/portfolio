@@ -581,6 +581,18 @@ const AdminPanel = {
         <label>Live Demo URL</label>
         <input type="url" id="m-proj-demo" placeholder="https://…"
                value="${this.esc(p?.demo ?? '')}">
+      </div>
+      <p class="form-section-label">Attachments (PDFs, Images)</p>
+      <div class="form-group">
+        <div id="attachments-list">
+          ${(p?.attachments || []).map(att => this._attachmentItemHTML(att)).join('')}
+        </div>
+        <div class="upload-actions">
+          <input type="file" id="attachment-file" accept="image/*,.pdf">
+          <button type="button" class="admin-btn" onclick="AdminPanel.addAttachment()">
+            <i class="fas fa-plus"></i> Add Attachment
+          </button>
+        </div>
       </div>`;
   },
 
@@ -613,6 +625,84 @@ const AdminPanel = {
     container.appendChild(wrap.firstElementChild);
   },
 
+  _allowedFileTypes() {
+    return ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+  },
+
+  _fileTypeFromExt(filename) {
+    const ext = filename.toLowerCase().split('.').pop();
+    return ext === 'pdf' ? 'pdf' : 'image';
+  },
+
+  async _uploadAttachment(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    const result = await this._post('/admin/api/upload/attachment', formData);
+    if (result?.status !== 'ok') {
+      throw new Error(result?.message || 'Upload failed');
+    }
+    return result;
+  },
+
+  async _removeAttachment(url) {
+    return this._delete(`/admin/api/attachments/${encodeURIComponent(url)}`);
+  },
+
+  _attachmentItemHTML(att) {
+    const icon = att.type === 'pdf' ? 'fas fa-file-pdf' : 'fas fa-image';
+    return `
+      <div class="attachment-item"
+           data-url="${this.esc(att.url)}"
+           data-name="${this.esc(att.name)}"
+           data-type="${this.esc(att.type || 'image')}">
+        <i class="${icon}" aria-hidden="true"></i>
+        <span>${this.esc(att.name)}</span>
+        <button type="button" class="admin-btn admin-btn-small admin-btn-danger" 
+                onclick="AdminPanel.removeAttachment('${this.esc(att.url)}', this)">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>`;
+  },
+
+  async addAttachment() {
+    const fileInput = document.getElementById('attachment-file');
+    if (!fileInput.files || !fileInput.files[0]) {
+      this._modalError('Please select a file first.');
+      return;
+    }
+
+    const file = fileInput.files[0];
+    const allowedTypes = this._allowedFileTypes();
+    
+    if (!allowedTypes.includes(file.type) && this._fileTypeFromExt(file.name) !== 'pdf') {
+      this._modalError('Please select a valid file type (PDF or image).');
+      return;
+    }
+
+    try {
+      const attachment = await this._uploadAttachment(file);
+      const list = document.getElementById('attachments-list');
+      list.insertAdjacentHTML('beforeend', this._attachmentItemHTML(attachment));
+      fileInput.value = ''; // Clear the file input
+    } catch (error) {
+      this._modalError(error.message || 'Failed to upload attachment.');
+    }
+  },
+
+  async removeAttachment(url, btnEl = null) {
+    if (!confirm('Remove this attachment?')) return;
+    
+    try {
+      const result = await this._removeAttachment(url);
+      if (result.status === 'ok') {
+        const row = btnEl?.closest('.attachment-item');
+        if (row) row.remove();
+      }
+    } catch (error) {
+      this._modalError(error.message || 'Failed to remove attachment.');
+    }
+  },
+
   async _saveProject(idx, isNew) {
     const metrics = Array.from(
       document.querySelectorAll('#m-proj-metrics .metric-row')
@@ -620,6 +710,13 @@ const AdminPanel = {
       value: row.querySelector('.metric-value').value.trim(),
       label: row.querySelector('.metric-label').value.trim(),
     })).filter(m => m.value || m.label);
+    const attachments = Array.from(
+      document.querySelectorAll('#attachments-list .attachment-item[data-url]')
+    ).map(item => ({
+      name: item.getAttribute('data-name') || '',
+      url: item.getAttribute('data-url') || '',
+      type: item.getAttribute('data-type') || 'image',
+    })).filter(a => a.url);
 
     const data = {
       title:    document.getElementById('m-proj-title').value.trim(),
@@ -635,6 +732,7 @@ const AdminPanel = {
                    ? document.getElementById('m-proj-demo')?.value.trim()
                    : '') || '',
       image:     document.getElementById('m-proj-image-url').value.trim(),
+      attachments,
     };
 
     const r = isNew
@@ -700,6 +798,25 @@ const AdminPanel = {
             <span class="cs-metric-label">${this.esc(m.label)}</span>
           </div>`).join('')}
         </div>` : '';
+    const attachmentFiles = (p.attachments || []).filter(att => att && att.url);
+    const attachmentsHTML = attachmentFiles.length
+      ? `<div class="project-attachments">
+          <button class="project-link attachments-btn" onclick="toggleAttachments(this)" type="button">
+            <i class="fas fa-paperclip" aria-hidden="true"></i>
+            View Files&nbsp;<span class="att-count">(${attachmentFiles.length})</span>
+          </button>
+          <div class="attachments-panel">
+            ${attachmentFiles.map(att => (
+              att.type === 'pdf'
+                ? `<a href="${this.esc(att.url)}" class="attachment-item" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-pdf"></i> ${this.esc(att.name)}
+                  </a>`
+                : `<span class="attachment-item attachment-img" data-src="${this.esc(att.url)}" data-alt="${this.esc(att.name)}" role="button" tabindex="0">
+                    <i class="fas fa-image"></i> ${this.esc(att.name)}
+                  </span>`
+            )).join('')}
+          </div>
+        </div>` : '';
 
     return `
       <article class="case-study-card" data-idx="${idx}">
@@ -734,6 +851,7 @@ const AdminPanel = {
               ? `<a href="${this.esc(p.demo)}" class="project-link demo" target="_blank" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i> Live Demo</a>`
               : `<a href="/#contact" class="project-link ask-demo"><i class="fas fa-envelope"></i> Request Demo</a>`}
           </div>
+          ${attachmentsHTML}
         </div>
       </article>`;
   },
@@ -1014,4 +1132,21 @@ document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   const loginModal = document.getElementById('admin-login-modal');
   if (loginModal?.classList.contains('active')) AdminPanel.login();
+});
+
+// Global function for toggling attachments panel
+function toggleAttachments(button) {
+  const parent = button.closest('.project-attachments');
+  if (!parent) return;
+  const panel = parent.querySelector('.attachments-panel');
+  if (!panel) return;
+  const shouldOpen = !panel.classList.contains('open');
+  document.querySelectorAll('.attachments-panel.open').forEach(p => p.classList.remove('open'));
+  if (shouldOpen) panel.classList.add('open');
+}
+
+document.addEventListener('click', function (e) {
+  if (!e.target.closest('.project-attachments')) {
+    document.querySelectorAll('.attachments-panel.open').forEach(p => p.classList.remove('open'));
+  }
 });
