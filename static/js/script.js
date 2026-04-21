@@ -246,3 +246,49 @@ if (navbar) {
     });
   }, { passive: true });   // passive:true tells browser we won't call preventDefault
 }
+
+
+/* ── 8. LIGHTBOX ──────────────────────────────────────────────────────────── */
+
+(function initLightbox() {
+  const lb      = document.getElementById('lightbox');
+  const lbImg   = document.getElementById('lightbox-img');
+  const lbClose = document.getElementById('lightbox-close');
+  if (!lb || !lbImg) return;
+
+  function openLightbox(src, alt) {
+    lbImg.src = src;
+    lbImg.alt = alt || '';
+    lb.classList.add('lb-open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    lb.classList.remove('lb-open');
+    document.body.style.overflow = '';
+    // Small delay so the fade-out doesn't show a blank src flash
+    setTimeout(() => { lbImg.src = ''; }, 200);
+  }
+
+  // Open on click of any zoomable image or project card header
+  document.addEventListener('click', function (e) {
+    // Direct image click
+    const img = e.target.closest('.cs-header-img, .avatar-photo');
+    if (img) { openLightbox(img.src, img.alt); return; }
+    // Click anywhere inside a card header that has an image
+    const header = e.target.closest('.cs-header');
+    if (header) {
+      const headerImg = header.querySelector('.cs-header-img');
+      if (headerImg) openLightbox(headerImg.src, headerImg.alt);
+    }
+  });
+
+  // Close via button, backdrop click, or Escape key
+  lbClose.addEventListener('click', closeLightbox);
+  lb.addEventListener('click', function (e) {
+    if (e.target === lb) closeLightbox();   // click on backdrop, not image
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && lb.classList.contains('lb-open')) closeLightbox();
+  });
+})();

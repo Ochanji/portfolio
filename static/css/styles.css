@@ -626,6 +626,7 @@ ul { list-style: none; }
   position: absolute;
   inset: 0;
   background: linear-gradient(to top, rgba(8,12,20,0.88) 0%, transparent 60%);
+  pointer-events: none;
 }
 
 .cs-tagline {
@@ -1173,7 +1174,78 @@ ul { list-style: none; }
 }
 
 
-/* ── 14. ALL-PROJECTS PAGE ───────────────────────────────────────────────── */
+/* ── 14. LIGHTBOX ────────────────────────────────────────────────────────── */
+
+#lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  cursor: zoom-out;
+}
+#lightbox.lb-open {
+  display: flex;
+  animation: lbFadeIn 0.2s ease-out both;
+}
+@keyframes lbFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+#lightbox img {
+  max-width: min(90vw, 1100px);
+  max-height: 88vh;
+  object-fit: contain;
+  border-radius: 0.75rem;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6);
+  cursor: default;
+  animation: lbZoomIn 0.22s ease-out both;
+}
+@keyframes lbZoomIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+#lightbox-close {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.5rem;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  line-height: 1;
+}
+#lightbox-close:hover { background: rgba(255,255,255,0.22); }
+
+/* Make clickable images feel interactive */
+.cs-header-img,
+.avatar-photo {
+  cursor: zoom-in;
+  transition: opacity 0.2s;
+}
+.cs-header-img:hover,
+.avatar-photo:hover { opacity: 0.88; }
+
+/* Entire card header is clickable when it has an image */
+.cs-header:has(.cs-header-img) {
+  cursor: zoom-in;
+}
+
+
+/* ── 15. ALL-PROJECTS PAGE ───────────────────────────────────────────────── */
 
 .projects-page {
   padding: 8rem 0 6rem;
