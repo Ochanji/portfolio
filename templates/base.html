@@ -10,12 +10,16 @@
 
   <title>{{ profile.get('name', 'Portfolio') }} — {{ profile.get('title', '') }}</title>
   <meta name="description"
-        content="Data Engineer and Digital Systems Specialist with 10+ years building ETL pipelines, BI dashboards, and production infrastructure.">
+        content="{{ profile.get('content', {}).get('meta_description', 'Data Engineer and Digital Systems Specialist with 10+ years building ETL pipelines, BI dashboards, and production infrastructure.') }}">
   <meta name="author" content="{{ profile.get('name', '') }}">
 
   <meta property="og:title"       content="{{ profile.get('name', '') }} — {{ profile.get('title', '') }}">
-  <meta property="og:description" content="Engineering data systems from pipeline to insight.">
+  <meta property="og:description" content="{{ profile.get('content', {}).get('og_description', 'Engineering data systems from pipeline to insight.') }}">
   <meta property="og:type"        content="website">
+
+  <script>
+    (function(){try{var t=localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme:light)').matches?'light':'dark');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+  </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,10 +29,25 @@
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
         crossorigin="anonymous" referrerpolicy="no-referrer">
 
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=9">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=10">
 
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+
+  <!-- Structured data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "{{ profile.get('name', '') }}",
+    "jobTitle": "{{ profile.get('title', '') }}",
+    "url": "{{ request.url_root.rstrip('/') }}",
+    "sameAs": [
+      {{ profile.get('contact', {}).get('linkedin', '#') | tojson }},
+      {{ profile.get('contact', {}).get('github', '#') | tojson }}
+    ]
+  }
+  </script>
 </head>
 
 <body{% if session.admin_logged_in %} class="admin-active"{% endif %}>
@@ -168,6 +187,9 @@
           </div>
         </label>
 
+        <button class="admin-btn" onclick="AdminPanel.openEditSection('page_content')">
+          <i class="fas fa-pen"></i> Content
+        </button>
         <button class="admin-btn" onclick="AdminPanel.openAddProject()">
           <i class="fas fa-plus"></i> Project
         </button>
@@ -212,9 +234,9 @@
   </div>
 
   <!-- ── Scripts ────────────────────────────────────────────────────────────── -->
-  <script src="{{ url_for('static', filename='js/script.js') }}?v=2"></script>
+  <script src="{{ url_for('static', filename='js/script.js') }}?v=3"></script>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-  <script src="{{ url_for('static', filename='js/admin.js') }}?v=2"></script>
+  <script src="{{ url_for('static', filename='js/admin.js') }}?v=3"></script>
 
 </body>
 </html>

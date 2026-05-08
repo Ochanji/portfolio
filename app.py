@@ -2,7 +2,7 @@
 Portfolio Flask Application — Vincent Ochanji
 =============================================
 Public routes:
-  GET  /            → main portfolio page (shows first 3 projects)
+  GET  /            → main portfolio page (shows first 4 projects)
   GET  /projects    → all projects page
   POST /contact     → contact form handler (JSON response)
 
@@ -26,7 +26,9 @@ import html
 import json
 import os
 import uuid
+from datetime import datetime
 from functools import wraps
+from pathlib import Path
 
 import resend
 from dotenv import load_dotenv
@@ -47,10 +49,11 @@ resend.api_key = os.getenv("RESEND_API_KEY", "")
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "dev-secret-change-in-production")
-app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024   # 5 MB upload limit
+app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 
-DATA_DIR   = os.path.join(os.path.dirname(__file__), "data")
-UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "static", "uploads")
+BASE_DIR   = Path(__file__).resolve().parent
+DATA_DIR   = BASE_DIR / "data"
+UPLOAD_DIR = BASE_DIR / "static" / "uploads"
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
 ALLOWED_CV_EXTENSIONS = {"pdf", "doc", "docx"}
 
@@ -72,19 +75,21 @@ def get_initials(name: str) -> str:
 
 def load_data(filename: str):
     """Read and return parsed JSON from data/<filename>."""
-    filepath = os.path.join(DATA_DIR, filename)
+    filepath = DATA_DIR / filename
     try:
-        with open(filepath, "r", encoding="utf-8") as fh:
-            return json.load(fh)
+        return json.loads(filepath.read_text(encoding="utf-8"))
     except FileNotFoundError:
         return {} if filename == "profile.json" else []
 
 
 def save_data(filename: str, data) -> None:
     """Serialise data as pretty-printed JSON and write to data/<filename>."""
-    filepath = os.path.join(DATA_DIR, filename)
-    with open(filepath, "w", encoding="utf-8") as fh:
-        json.dump(data, fh, indent=2, ensure_ascii=False)
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    filepath = DATA_DIR / filename
+    filepath.write_text(
+        json.dumps(data, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
 
 
 def allowed_file(filename: str) -> bool:
@@ -156,28 +161,30 @@ def contact():
     to_email = os.getenv("CONTACT_TO_EMAIL", "")
     if not resend.api_key:
         print("[Contact] WARNING: RESEND_API_KEY is not set — email not sent.")
-    elif not to_email:
+        return jsonify({"status": "error", "message": "Email service not configured. Please email me directly."}), 500
+    if not to_email:
         print("[Contact] WARNING: CONTACT_TO_EMAIL is not set — email not sent.")
-    else:
-        try:
-            safe_name    = html.escape(name)
-            safe_email   = html.escape(email)
-            safe_message = html.escape(message).replace("\n", "<br>")
-            resend.Emails.send({
-                "from":     "Portfolio Contact <onboarding@resend.dev>",
-                "to":       [to_email],
-                "reply_to": email,
-                "subject":  f"Portfolio enquiry from {safe_name}",
-                "html": (
-                    f"<p><strong>Name:</strong> {safe_name}</p>"
-                    f"<p><strong>Email:</strong> {safe_email}</p>"
-                    f"<p><strong>Message:</strong></p>"
-                    f"<p>{safe_message}</p>"
-                ),
-            })
-            print(f"[Contact] Email sent to {to_email} from {email}")
-        except Exception as exc:
-            print(f"[Contact] Resend error: {exc}")
+        return jsonify({"status": "error", "message": "Contact destination not configured."}), 500
+    try:
+        safe_name    = html.escape(name)
+        safe_email   = html.escape(email)
+        safe_message = html.escape(message).replace("\n", "<br>")
+        resend.Emails.send({
+            "from":     "Portfolio Contact <onboarding@resend.dev>",
+            "to":       [to_email],
+            "reply_to": email,
+            "subject":  f"Portfolio enquiry from {safe_name}",
+            "html": (
+                f"<p><strong>Name:</strong> {safe_name}</p>"
+                f"<p><strong>Email:</strong> {safe_email}</p>"
+                f"<p><strong>Message:</strong></p>"
+                f"<p>{safe_message}</p>"
+            ),
+        })
+        print(f"[Contact] Email sent to {to_email} from {email}")
+    except Exception as exc:
+        print(f"[Contact] Resend error: {exc}")
+        return jsonify({"status": "error", "message": "Failed to send email. Please try again later."}), 500
 
     print(f"[Contact] {name} <{email}>: {message}")
     return jsonify({"status": "ok", "message": "Thanks — I'll be in touch soon."})
@@ -239,10 +246,10 @@ def admin_api_upload():
             "message": "Invalid file type. Use PNG, JPG, GIF, or WebP.",
         }), 400
 
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     ext      = file.filename.rsplit(".", 1)[1].lower()
     filename = f"{uuid.uuid4().hex}.{ext}"
-    file.save(os.path.join(UPLOAD_DIR, filename))
+    file.save(str(UPLOAD_DIR / filename))
 
     return jsonify({"status": "ok", "url": f"/static/uploads/{filename}"})
 
@@ -263,10 +270,10 @@ def admin_api_cv():
             "message": "Invalid file type. Use PDF, DOC, or DOCX.",
         }), 400
 
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     ext      = file.filename.rsplit(".", 1)[1].lower()
     filename = f"cv.{ext}"
-    file.save(os.path.join(UPLOAD_DIR, filename))
+    file.save(str(UPLOAD_DIR / filename))
 
     url     = f"/static/uploads/{filename}"
     profile = load_data("profile.json")
@@ -284,9 +291,9 @@ def admin_api_cv_delete():
     save_data("profile.json", profile)
 
     if old_url:
-        old_path = os.path.join(os.path.dirname(__file__), old_url.lstrip("/"))
+        old_path = BASE_DIR / old_url.lstrip("/")
         try:
-            os.remove(old_path)
+            old_path.unlink(missing_ok=True)
         except OSError:
             pass
 
@@ -309,10 +316,10 @@ def admin_api_upload_attachment():
     ):
         return jsonify({"status": "error", "message": "Invalid file type. Use PDF or an image."}), 400
 
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     ext      = file.filename.rsplit(".", 1)[1].lower()
     filename = f"{uuid.uuid4().hex}.{ext}"
-    file.save(os.path.join(UPLOAD_DIR, filename))
+    file.save(str(UPLOAD_DIR / filename))
 
     file_type = "pdf" if ext == "pdf" else "image"
     return jsonify({
@@ -334,12 +341,12 @@ def admin_api_delete_attachment(url):
     filename = secure_filename(decoded.split("/")[-1])
     if not filename:
         return jsonify({"status": "error", "message": "Invalid file."}), 400
-    filepath = os.path.join(UPLOAD_DIR, filename)
+    filepath = UPLOAD_DIR / filename
     
     try:
         deleted = False
-        if os.path.exists(filepath):
-            os.remove(filepath)
+        if filepath.exists():
+            filepath.unlink()
             deleted = True
 
         # Remove any references to this file from projects attachments.
@@ -377,8 +384,7 @@ def _build_project(data: dict) -> dict:
     raw_metrics = data.get("metrics", [])
     if isinstance(raw_metrics, str):
         try:
-            import json as _json
-            raw_metrics = _json.loads(raw_metrics)
+            raw_metrics = json.loads(raw_metrics)
         except Exception:
             raw_metrics = []
     metrics = [
@@ -389,8 +395,7 @@ def _build_project(data: dict) -> dict:
     raw_attachments = data.get("attachments", [])
     if isinstance(raw_attachments, str):
         try:
-            import json as _json2
-            raw_attachments = _json2.loads(raw_attachments)
+            raw_attachments = json.loads(raw_attachments)
         except Exception:
             raw_attachments = []
     attachments = [
@@ -544,7 +549,33 @@ def admin_dashboard():
     return redirect(url_for("home"))
 
 
+# ── SEO routes ─────────────────────────────────────────────────────────────────
+
+
+@app.route("/robots.txt")
+def robots_txt():
+    return """User-agent: *
+Allow: /
+Sitemap: """ + request.url_root.rstrip("/") + """/sitemap.xml
+""", 200, {"Content-Type": "text/plain"}
+
+
+@app.route("/sitemap.xml")
+def sitemap_xml():
+    projects = load_data("projects.json")
+    urls = [request.url_root.rstrip("/")]
+    urls.append(urls[0] + "/projects")
+    for i, _ in enumerate(projects):
+        urls.append(urls[0] + f"/#project-{i}")
+    now = datetime.now().strftime("%Y-%m-%d")
+    xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    for u in urls:
+        xml += f"  <url><loc>{u}</loc><lastmod>{now}</lastmod></url>\n"
+    xml += "</urlset>"
+    return xml, 200, {"Content-Type": "application/xml"}
+
+
 # ── Entry point ────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=os.getenv("FLASK_DEBUG", "1") == "1")

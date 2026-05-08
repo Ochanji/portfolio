@@ -25,6 +25,9 @@ const AdminPanel = {
       .replace(/"/g, '&quot;');
   },
 
+  _val(id) { return document.getElementById(id)?.value?.trim() ?? ''; },
+  _txt(id) { return document.getElementById(id)?.textContent?.trim() ?? ''; },
+
   async _req(method, url, body = null) {
     const opts = { method, credentials: 'same-origin' };
     if (body instanceof FormData) {
@@ -236,11 +239,12 @@ const AdminPanel = {
     this._currentProfile = profile;
 
     const map = {
-      hero:    ['Edit Hero Section',    () => this._heroForm(profile),    () => this._saveHero()],
-      about:   ['Edit About Section',   () => this._aboutForm(profile),   () => this._saveAbout()],
-      skills:  ['Edit Skills & Stack',  () => this._skillsForm(profile),  () => this._saveSkills()],
-      contact: ['Edit Contact Details', () => this._contactForm(profile), () => this._saveContact()],
-      footer:  ['Edit Footer',          () => this._footerForm(profile),  () => this._saveFooter()],
+      hero:        ['Edit Hero Section',        () => this._heroForm(profile),        () => this._saveHero()],
+      about:       ['Edit About Section',       () => this._aboutForm(profile),       () => this._saveAbout()],
+      skills:      ['Edit Skills & Stack',      () => this._skillsForm(profile),      () => this._saveSkills()],
+      contact:     ['Edit Contact Details',     () => this._contactForm(profile),     () => this._saveContact()],
+      footer:      ['Edit Footer',              () => this._footerForm(profile),      () => this._saveFooter()],
+      page_content: ['Edit Page Content',       () => this._pageContentForm(profile), () => this._savePageContent()],
     };
 
     const entry = map[section];
@@ -478,6 +482,116 @@ const AdminPanel = {
     if (r.status !== 'ok') { this._modalError(r.message); return; }
     this._applyFooter(p);
     this.closeModal();
+  },
+
+
+  // ── Page Content ────────────────────────────────────────────────────────────
+
+  _pageContentForm(p) {
+    const c = p.content || {};
+    return `
+      <div class="form-group">
+        <label>Meta Description (SEO)</label>
+        <textarea id="pc-meta-desc" rows="2">${this.esc(c.meta_description ?? '')}</textarea>
+      </div>
+      <div class="form-group">
+        <label>OG Description (social share)</label>
+        <textarea id="pc-og-desc" rows="2">${this.esc(c.og_description ?? '')}</textarea>
+      </div>
+      <p class="form-section-label">Hero Section</p>
+      <div class="form-group">
+        <label>Primary CTA button text</label>
+        <input type="text" id="pc-hero-primary" value="${this.esc(c.hero_primary_btn ?? 'View Work')}">
+      </div>
+      <div class="form-group">
+        <label>Secondary CTA button text</label>
+        <input type="text" id="pc-hero-secondary" value="${this.esc(c.hero_secondary_btn ?? 'Contact Me')}">
+      </div>
+      <p class="form-section-label">About Section</p>
+      <div class="form-group">
+        <label>Section title</label>
+        <input type="text" id="pc-about-title" value="${this.esc(c.about_title ?? 'About Me')}">
+      </div>
+      <p class="form-section-label">Skills Section</p>
+      <div class="form-group">
+        <label>Section title</label>
+        <input type="text" id="pc-skills-title" value="${this.esc(c.skills_title ?? 'Skills & Stack')}">
+      </div>
+      <div class="form-group">
+        <label>Subtitle</label>
+        <input type="text" id="pc-skills-subtitle" value="${this.esc(c.skills_subtitle ?? '')}">
+      </div>
+      <p class="form-section-label">Projects Section</p>
+      <div class="form-group">
+        <label>Section title</label>
+        <input type="text" id="pc-projects-title" value="${this.esc(c.projects_title ?? 'Projects')}">
+      </div>
+      <div class="form-group">
+        <label>Subtitle</label>
+        <input type="text" id="pc-projects-subtitle" value="${this.esc(c.projects_subtitle ?? '')}">
+      </div>
+      <div class="form-group">
+        <label>"View All" button text</label>
+        <input type="text" id="pc-projects-view-all" value="${this.esc(c.projects_view_all ?? 'View All Projects')}">
+      </div>
+      <p class="form-section-label">Experience Section</p>
+      <div class="form-group">
+        <label>Section title</label>
+        <input type="text" id="pc-experience-title" value="${this.esc(c.experience_title ?? 'Experience')}">
+      </div>
+      <div class="form-group">
+        <label>Subtitle</label>
+        <input type="text" id="pc-experience-subtitle" value="${this.esc(c.experience_subtitle ?? '')}">
+      </div>
+      <p class="form-section-label">Contact Section</p>
+      <div class="form-group">
+        <label>Section title</label>
+        <input type="text" id="pc-contact-title" value="${this.esc(c.contact_title ?? 'Get In Touch')}">
+      </div>
+      <div class="form-group">
+        <label>Subtitle</label>
+        <input type="text" id="pc-contact-subtitle" value="${this.esc(c.contact_subtitle ?? '')}">
+      </div>
+      <p class="form-section-label">All Projects Page</p>
+      <div class="form-group">
+        <label>Page title</label>
+        <input type="text" id="pc-all-projects-title" value="${this.esc(c.all_projects_title ?? 'All Projects')}">
+      </div>
+      <div class="form-group">
+        <label>Subtitle</label>
+        <input type="text" id="pc-all-projects-subtitle" value="${this.esc(c.all_projects_subtitle ?? '')}">
+      </div>
+      <div class="form-group">
+        <label>"Back to Portfolio" link text</label>
+        <input type="text" id="pc-back-link" value="${this.esc(c.back_to_portfolio ?? 'Back to Portfolio')}">
+      </div>`;
+  },
+
+  async _savePageContent() {
+    const p = this._currentProfile;
+    p.content = {
+      meta_description:    document.getElementById('pc-meta-desc').value.trim(),
+      og_description:      document.getElementById('pc-og-desc').value.trim(),
+      hero_primary_btn:    document.getElementById('pc-hero-primary').value.trim(),
+      hero_secondary_btn:  document.getElementById('pc-hero-secondary').value.trim(),
+      about_title:         document.getElementById('pc-about-title').value.trim(),
+      skills_title:        document.getElementById('pc-skills-title').value.trim(),
+      skills_subtitle:     document.getElementById('pc-skills-subtitle').value.trim(),
+      projects_title:      document.getElementById('pc-projects-title').value.trim(),
+      projects_subtitle:   document.getElementById('pc-projects-subtitle').value.trim(),
+      projects_view_all:   document.getElementById('pc-projects-view-all').value.trim(),
+      experience_title:    document.getElementById('pc-experience-title').value.trim(),
+      experience_subtitle: document.getElementById('pc-experience-subtitle').value.trim(),
+      contact_title:       document.getElementById('pc-contact-title').value.trim(),
+      contact_subtitle:    document.getElementById('pc-contact-subtitle').value.trim(),
+      all_projects_title:      document.getElementById('pc-all-projects-title').value.trim(),
+      all_projects_subtitle:   document.getElementById('pc-all-projects-subtitle').value.trim(),
+      back_to_portfolio:       document.getElementById('pc-back-link').value.trim(),
+    };
+
+    const r = await this._post('/admin/api/profile', p);
+    if (r.status !== 'ok') { this._modalError(r.message); return; }
+    window.location.reload();
   },
 
 
@@ -800,7 +914,7 @@ const AdminPanel = {
     const grid = document.querySelector('.projects-grid');
     if (!grid) return;
     const isAllPage = window.location.pathname === '/projects';
-    const list = isAllPage ? projects : projects.slice(0, 3);
+    const list = isAllPage ? projects : projects.slice(0, 4);
     grid.innerHTML = list.map((p, i) => this._projectCardHTML(i, p, list.length)).join('');
   },
 

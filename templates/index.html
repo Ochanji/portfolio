@@ -12,6 +12,7 @@
 
 {# ── 1. HERO ──────────────────────────────────────────────────────────────── #}
 <section id="hero" class="hero" data-section="hero" aria-label="Introduction">
+  <canvas id="hero-canvas" aria-hidden="true"></canvas>
   <div class="container hero-content">
 
     {% if session.admin_logged_in %}
@@ -27,9 +28,10 @@
     <p class="hero-role">{{ profile.get('title', 'Your Title') }}</p>
     <p class="hero-tagline">{{ profile.get('hero', {}).get('tagline', '') }}</p>
 
+    {% set c = profile.get('content', {}) %}
     <div class="hero-buttons">
-      <a href="#projects" class="cta-button">View Work</a>
-      <a href="#contact"  class="cta-button secondary">Contact Me</a>
+      <a href="#projects" class="cta-button">{{ c.get('hero_primary_btn', 'View Work') }}</a>
+      <a href="#contact"  class="cta-button secondary">{{ c.get('hero_secondary_btn', 'Contact Me') }}</a>
     </div>
 
   </div>
@@ -48,13 +50,13 @@
     </div>
     {% endif %}
 
-    <h2 class="section-title">About Me</h2>
+    <h2 class="section-title">{{ c.get('about_title', 'About Me') }}</h2>
 
     <div class="about-content">
 
       <div class="about-avatar">
         {% if profile.get('avatar') %}
-        <img src="{{ profile.avatar }}" alt="{{ profile.get('name', '') }}" class="avatar-photo">
+        <img src="{{ profile.avatar }}" alt="{{ profile.get('name', '') }}" class="avatar-photo" loading="lazy" decoding="async">
         {% else %}
         <div class="avatar-initials" aria-hidden="true">{{ profile.get('name', 'VO')|initials }}</div>
         {% endif %}
@@ -106,8 +108,8 @@
     </div>
     {% endif %}
 
-    <h2 class="section-title">Skills &amp; Stack</h2>
-    <p class="section-subtitle">10+ years across the full data lifecycle</p>
+    <h2 class="section-title">{{ c.get('skills_title', 'Skills & Stack') }}</h2>
+    <p class="section-subtitle">{{ c.get('skills_subtitle', '10+ years across the full data lifecycle') }}</p>
 
     <div class="skills-grid">
       {% for group in profile.get('skills', []) %}
@@ -143,11 +145,11 @@
 </section>
 
 
-{# ── 4. PROJECTS (first 3 shown — "View All" links to /projects) ─────────── #}
+{# ── 4. PROJECTS (first 4 shown — "View All" links to /projects) ─────────── #}
 <section id="projects" class="projects" data-section="projects" aria-label="Projects">
   <div class="container">
-    <h2 class="section-title">Projects</h2>
-    <p class="section-subtitle">A selection of work — building data systems that matter.</p>
+    <h2 class="section-title">{{ c.get('projects_title', 'Projects') }}</h2>
+    <p class="section-subtitle">{{ c.get('projects_subtitle', 'A selection of work — building data systems that matter.') }}</p>
 
     <div class="projects-grid">
       {% for project in projects[:4] %}
@@ -180,7 +182,7 @@
         {# Header: image with overlay OR gradient mesh band #}
         <div class="cs-header">
           {% if project.image %}
-          <img src="{{ project.image }}" alt="{{ project.title }}" class="cs-header-img">
+          <img src="{{ project.image }}" alt="{{ project.title }}" class="cs-header-img" loading="lazy" decoding="async">
           <div class="cs-header-overlay"></div>
           {% endif %}
           <p class="cs-tagline">{{ project.tagline }}</p>
@@ -287,7 +289,7 @@
     {# "View All" button — always shown #}
     <div class="projects-footer">
       <a href="/projects" class="cta-button secondary projects-view-all">
-        View All Projects <i class="fas fa-arrow-right"></i>
+        {{ c.get('projects_view_all', 'View All Projects') }} <i class="fas fa-arrow-right"></i>
       </a>
     </div>
 
@@ -298,8 +300,8 @@
 {# ── 5. EXPERIENCE ────────────────────────────────────────────────────────── #}
 <section id="experience" class="experience" data-section="experience" aria-label="Work experience">
   <div class="container">
-    <h2 class="section-title">Experience</h2>
-    <p class="section-subtitle">A decade of building data systems that matter</p>
+    <h2 class="section-title">{{ c.get('experience_title', 'Experience') }}</h2>
+    <p class="section-subtitle">{{ c.get('experience_subtitle', 'A decade of building data systems that matter') }}</p>
 
     <div class="timeline">
       {% for job in experience %}
@@ -355,10 +357,8 @@
     </div>
     {% endif %}
 
-    <h2 class="section-title">Get In Touch</h2>
-    <p class="section-subtitle">
-      Open to data engineering roles, consulting, and freelance projects.
-    </p>
+    <h2 class="section-title">{{ c.get('contact_title', 'Get In Touch') }}</h2>
+    <p class="section-subtitle">{{ c.get('contact_subtitle', 'Open to data engineering roles, consulting, and freelance projects.') }}</p>
 
     <div class="contact-wrapper">
 

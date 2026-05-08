@@ -330,7 +330,7 @@ ul { list-style: none; }
   overflow: hidden;
 }
 
-/* Decorative dot-grid background */
+/* Animated gradient orb */
 .hero::before {
   content: '';
   position: absolute;
@@ -341,9 +341,41 @@ ul { list-style: none; }
   pointer-events: none;
 }
 
+.hero::after {
+  content: '';
+  position: absolute;
+  width: 80vw;
+  height: 80vw;
+  max-width: 900px;
+  max-height: 900px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse at center, rgba(59,130,246,0.10) 0%, transparent 60%);
+  pointer-events: none;
+  animation: heroOrb 8s ease-in-out infinite alternate;
+}
+
+@keyframes heroOrb {
+  0%   { transform: translate(-50%, -50%) scale(1)   translateX(0);   opacity: 0.6; }
+  50%  { transform: translate(-45%, -55%) scale(1.15) translateX(2%); opacity: 1; }
+  100% { transform: translate(-55%, -45%) scale(0.95) translateX(-2%); opacity: 0.7; }
+}
+
+/* Particle canvas — full-bleed overlay */
+#hero-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
 /* Centres all hero children */
 .hero-content {
-  position: relative;       /* above ::before */
+  position: relative;
+  z-index: 2;
   max-width: 760px;
   margin: 0 auto;
 }
@@ -1310,6 +1342,15 @@ ul { list-style: none; }
 
 .fade-in-up {
   animation: fadeInUp 0.55s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 
