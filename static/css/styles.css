@@ -163,15 +163,18 @@ ul { list-style: none; }
 
 /* Section headings with gradient underline */
 .section-title {
-  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-size: clamp(1.35rem, 5vw, 2.5rem);
   font-weight: 700;
   text-align: center;
   color: var(--text-primary);
   margin-bottom: 0.75rem;
   position: relative;
-  display: inline-block;
-  left: 50%;
-  transform: translateX(-50%);
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 0.5rem;
 }
 .section-title::after {
   content: '';
@@ -377,6 +380,7 @@ ul { list-style: none; }
   position: relative;
   z-index: 2;
   max-width: 760px;
+  width: 100%;
   margin: 0 auto;
 }
 
@@ -481,15 +485,15 @@ ul { list-style: none; }
 }
 
 .avatar-initials {
-  width: 220px;
-  height: 220px;
+  width: clamp(140px, 22vw, 220px);
+  height: clamp(140px, 22vw, 220px);
   border-radius: 50%;
   background: var(--bg-card);
   border: 3px solid var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.5rem;
+  font-size: clamp(1.6rem, 3.5vw, 2.5rem);
   font-weight: 800;
   color: var(--accent);
   letter-spacing: -1px;
@@ -1849,8 +1853,8 @@ body.admin-edit-mode section[data-section] {
 
 /* When a real photo is set — circular, same size as the initials placeholder */
 .avatar-photo {
-  width: 220px;
-  height: 220px;
+  width: clamp(140px, 22vw, 220px);
+  height: clamp(140px, 22vw, 220px);
   border-radius: 50%;
   object-fit: cover;
   object-position: center top; /* keep face centred when cropping tight */
@@ -1974,11 +1978,6 @@ body.admin-edit-mode section[data-section] {
     text-align: center;
   }
   .about-avatar { margin: 0 auto; }
-  .avatar-initials {
-    width: clamp(140px, 40vw, 220px);
-    height: clamp(140px, 40vw, 220px);
-    font-size: clamp(1.5rem, 5vw, 2.5rem);
-  }
   .about-text-content { max-width: 100%; }
   .social-links { justify-content: center; }
 
@@ -2003,12 +2002,19 @@ body.admin-edit-mode section[data-section] {
 
 }
 
-/* ── Tablets & small desktops (769px – 1024px) ── */
+/* ── Tablets (769px – 1024px) ── */
 @media (min-width: 769px) and (max-width: 1024px) {
 
   .projects-grid { grid-template-columns: repeat(2, 1fr); }
   .skills-grid { grid-template-columns: repeat(2, 1fr); }
   .about-content { gap: clamp(1.5rem, 3vw, 3rem); }
+
+}
+
+/* ── Small desktops (1025px – 1439px) ── */
+@media (min-width: 1025px) and (max-width: 1439px) {
+
+  .projects-grid { grid-template-columns: repeat(3, 1fr); }
 
 }
 
@@ -2020,12 +2026,15 @@ body.admin-edit-mode section[data-section] {
   .projects .container,
   .projects-page .container { max-width: 1540px; }
 
-  .avatar-initials {
-    width: 260px;
-    height: 260px;
-    font-size: 3rem;
-  }
+  .projects-grid { grid-template-columns: repeat(3, 1fr); }
 
   .case-study-card { max-width: 100%; }
+
+}
+
+/* ── Ultra-wide (≥ 1800px) ── */
+@media (min-width: 1800px) {
+
+  .projects-grid { grid-template-columns: repeat(4, 1fr); }
 
 }
