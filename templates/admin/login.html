@@ -108,9 +108,31 @@
 
   </div>
 
-  {# Font Awesome for the error icon #}
-  <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-        crossorigin="anonymous">
+  {# Inline SVG icon sprite + converter #}
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+    <defs>
+      <symbol id="icon-exclamation-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none"/><path d="M12 8v4M12 16h.01"/></symbol>
+    </defs>
+  </svg>
+  <script>
+    document.addEventListener('DOMContentLoaded',function(){
+      document.querySelectorAll('i[class*="fa-"]').forEach(function(el){
+        var m=el.className.match(/fa[sbr]\s+fa-([a-z0-9-]+)/);
+        if(!m)return;
+        var sym=document.getElementById('icon-'+m[1]);
+        if(!sym)return;
+        var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+        svg.setAttribute('viewBox',sym.getAttribute('viewBox')||'0 0 24 24');
+        svg.setAttribute('class','icon icon-'+m[1]);
+        svg.setAttribute('aria-hidden','true');
+        Array.from(sym.childNodes).forEach(function(c){svg.appendChild(c.cloneNode(true))});
+        el.parentNode.replaceChild(svg,el);
+      });
+    });
+  </script>
+  <style>
+    .icon{width:1em;height:1em;vertical-align:-0.125em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+    .icon>circle,.icon>rect,.icon>ellipse{fill:currentColor;stroke:none}
+  </style>
 </body>
 </html>

@@ -5,6 +5,40 @@
 
 'use strict';
 
+/* ── 0. FONT AWESOME → SVG CONVERTER ─────────────────────────────────────── */
+
+window.convertFAIcons = function(root) {
+  root = root || document;
+  const icons = root.querySelectorAll('i[class*="fa-"]');
+  icons.forEach(function(el) {
+    const cls = el.className;
+    const match = cls.match(/fa[sbr]\s+fa-([a-z0-9-]+)/);
+    if (!match) return;
+    const name = match[1];
+    // Look up the symbol from the sprite and clone its contents inline
+    const symbol = document.getElementById('icon-' + name);
+    if (!symbol) return;
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', symbol.getAttribute('viewBox') || '0 0 24 24');
+    var newClass = cls.replace(/fa[sbr]\s+fa-[a-z0-9-]+/g, '').trim();
+    newClass = (newClass ? newClass + ' ' : '') + 'icon icon-' + name;
+    svg.setAttribute('class', newClass);
+    svg.setAttribute('aria-hidden', el.getAttribute('aria-hidden') || 'true');
+    if (el.id) svg.setAttribute('id', el.id);
+    if (el.style.cssText) svg.setAttribute('style', el.style.cssText);
+    if (cls.includes('fa-spin')) svg.classList.add('icon-spin');
+    // Clone all child nodes from the symbol (paths, rects, circles, etc.)
+    Array.from(symbol.childNodes).forEach(function(child) {
+      svg.appendChild(child.cloneNode(true));
+    });
+    el.parentNode.replaceChild(svg, el);
+  });
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+  convertFAIcons();
+});
+
 /* ── 1. THEME TOGGLE ──────────────────────────────────────────────────────── */
 
 (function initTheme() {
@@ -69,37 +103,96 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   });
 });
 
-/* ── 5. CONTACT FORM — AJAX SUBMISSION ──────────────────────────────────── */
+/* ── 5. CONTACT FORM — REAL-TIME VALIDATION + AJAX SUBMISSION ────────────── */
 
-document.getElementById('contact-form')?.addEventListener('submit', async function (e) {
-  e.preventDefault();
-  const submitBtn  = document.getElementById('submit-btn');
-  const feedbackEl = document.getElementById('form-feedback');
-  const name    = this.querySelector('#name').value.trim();
-  const email   = this.querySelector('#email').value.trim();
-  const message = this.querySelector('#message').value.trim();
+const contactForm = document.getElementById('contact-form');
+if (contactForm) {
+  const nameInput    = contactForm.querySelector('#name');
+  const emailInput   = contactForm.querySelector('#email');
+  const messageInput = contactForm.querySelector('#message');
+  const nameErr      = document.getElementById('name-error');
+  const emailErr     = document.getElementById('email-error');
+  const messageErr   = document.getElementById('message-error');
 
-  const err = !name || !email || !message ? 'Please fill in all fields.' :
-              !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? 'Please enter a valid email address.' : null;
-  if (err) { showFeedback(feedbackEl, err, 'error'); return; }
+  function validateField(field, errorEl) {
+    const val = field.value.trim();
+    let error = null;
 
-  submitBtn.textContent = 'Sending…';
-  submitBtn.disabled    = true;
-  feedbackEl.textContent = '';
-  feedbackEl.className   = 'form-feedback';
+    if (field === nameInput) {
+      if (!val) error = 'Name is required.';
+      else if (val.length < 2) error = 'Name must be at least 2 characters.';
+    } else if (field === emailInput) {
+      if (!val) error = 'Email is required.';
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) error = 'Please enter a valid email.';
+    } else if (field === messageInput) {
+      if (!val) error = 'Message is required.';
+      else if (val.length < 10) error = 'Message must be at least 10 characters.';
+    }
 
-  try {
-    const resp = await fetch('/contact', { method: 'POST', body: new FormData(this) });
-    const data = await resp.json();
-    if (resp.ok && data.status === 'ok') { showFeedback(feedbackEl, data.message, 'success'); this.reset(); }
-    else { showFeedback(feedbackEl, data.message ?? 'Something went wrong.', 'error'); }
-  } catch {
-    showFeedback(feedbackEl, 'Could not send message. Please email me directly.', 'error');
-  } finally {
-    submitBtn.textContent = 'Send Message';
-    submitBtn.disabled    = false;
+    field.classList.remove('valid', 'invalid');
+    errorEl.classList.remove('visible');
+    if (val) {
+      if (error) {
+        field.classList.add('invalid');
+        errorEl.textContent = error;
+        errorEl.classList.add('visible');
+      } else {
+        field.classList.add('valid');
+      }
+    }
+    return !error;
   }
-});
+
+  [nameInput, emailInput, messageInput].forEach(field => {
+    field?.addEventListener('blur', () => {
+      const errEl = field === nameInput ? nameErr : field === emailInput ? emailErr : messageErr;
+      validateField(field, errEl);
+    });
+    field?.addEventListener('input', () => {
+      field.classList.remove('valid', 'invalid');
+      const errEl = field === nameInput ? nameErr : field === emailInput ? emailErr : messageErr;
+      if (errEl) { errEl.classList.remove('visible'); errEl.textContent = ''; }
+      if (field.value.trim() && field === emailInput && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field.value.trim())) {
+        field.classList.add('valid');
+      }
+    });
+  });
+
+  /* ── AJAX Submission ── */
+  contactForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const submitBtn  = document.getElementById('submit-btn');
+    const feedbackEl = document.getElementById('form-feedback');
+
+    const nameValid    = validateField(nameInput, nameErr);
+    const emailValid   = validateField(emailInput, emailErr);
+    const messageValid = validateField(messageInput, messageErr);
+
+    if (!nameValid || !emailValid || !messageValid) return;
+
+    submitBtn.textContent = 'Sending…';
+    submitBtn.disabled    = true;
+    feedbackEl.textContent = '';
+    feedbackEl.className   = 'form-feedback';
+
+    try {
+      const resp = await fetch('/contact', { method: 'POST', body: new FormData(this) });
+      const data = await resp.json();
+      if (resp.ok && data.status === 'ok') {
+        showFeedback(feedbackEl, data.message, 'success');
+        this.reset();
+        [nameInput, emailInput, messageInput].forEach(f => f?.classList.remove('valid', 'invalid'));
+      } else {
+        showFeedback(feedbackEl, data.message ?? 'Something went wrong.', 'error');
+      }
+    } catch {
+      showFeedback(feedbackEl, 'Could not send message. Please email me directly.', 'error');
+    } finally {
+      submitBtn.textContent = 'Send Message';
+      submitBtn.disabled    = false;
+    }
+  });
+}
 
 function showFeedback(el, message, type) {
   if (!el) return;
@@ -120,7 +213,32 @@ const animationObserver = new IntersectionObserver(
 );
 document.querySelectorAll('section').forEach(s => animationObserver.observe(s));
 
-/* ── 7. NAVBAR SCROLL EFFECT ─────────────────────────────────────────────── */
+/* ── 7. SCROLL PROGRESS BAR ──────────────────────────────────────────────── */
+
+const progressBar = document.getElementById('scroll-progress');
+if (progressBar) {
+  window.addEventListener('scroll', () => {
+    const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+    const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    const scrolled = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+    progressBar.style.width = `${scrolled}%`;
+}, { passive: true });
+}
+
+/* Back to top button visibility and click */
+const backToTop = document.getElementById('back-to-top');
+if (backToTop) {
+  window.addEventListener('scroll', () => {
+    const show = (document.documentElement.scrollTop || document.body.scrollTop) > 500;
+    backToTop.classList.toggle('visible', show);
+  }, { passive: true });
+
+  backToTop.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
+/* ── 8. NAVBAR SCROLL EFFECT ───────────────────────────────────────────────── */
 
 const navbar = document.querySelector('.navbar');
 navbar && window.addEventListener('scroll', () => {
@@ -157,7 +275,7 @@ class HeroParticles {
         speedX: (Math.random() - 0.5) * 0.2,
         speedY: -Math.random() * 0.4 - 0.05,
         opacity: Math.random() * 0.4 + 0.05,
-      });
+  });
     }
   }
 
@@ -199,10 +317,10 @@ if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
   document.addEventListener('click', e => {
     const att = e.target.closest('.attachment-img');
     if (att) { const s = att.getAttribute('data-src'); if (s) open(s, att.getAttribute('data-alt') ?? ''); return; }
-    const img = e.target.closest('.cs-header-img, .avatar-photo');
+    const img = e.target.closest('.strip-visual-img, .hero-photo');
     if (img) { open(img.src, img.alt); return; }
-    const hdr = e.target.closest('.cs-header');
-    if (hdr) { const hi = hdr.querySelector('.cs-header-img'); if (hi) open(hi.src, hi.alt); }
+    const vis = e.target.closest('.strip-visual');
+    if (vis) { const vi = vis.querySelector('.strip-visual-img'); if (vi) open(vi.src, vi.alt); }
   });
 
   lbClose?.addEventListener('click', close);

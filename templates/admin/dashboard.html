@@ -11,9 +11,37 @@
   <title>Admin Dashboard — Vincent Ochanji Portfolio</title>
 
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-  <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-        crossorigin="anonymous">
+
+  {# Inline SVG icon sprite + converter #}
+  <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+    <defs>
+      <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
+      <symbol id="icon-sign-out-alt" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></symbol>
+      <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+      <symbol id="icon-pen" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></symbol>
+      <symbol id="icon-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></symbol>
+    </defs>
+  </svg>
+  <script>
+    document.addEventListener('DOMContentLoaded',function(){
+      document.querySelectorAll('i[class*="fa-"]').forEach(function(el){
+        var m=el.className.match(/fa[sbr]\s+fa-([a-z0-9-]+)/);
+        if(!m)return;
+        var sym=document.getElementById('icon-'+m[1]);
+        if(!sym)return;
+        var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+        svg.setAttribute('viewBox',sym.getAttribute('viewBox')||'0 0 24 24');
+        svg.setAttribute('class','icon icon-'+m[1]);
+        svg.setAttribute('aria-hidden','true');
+        Array.from(sym.childNodes).forEach(function(c){svg.appendChild(c.cloneNode(true))});
+        el.parentNode.replaceChild(svg,el);
+      });
+    });
+  </script>
+  <style>
+    .icon{width:1em;height:1em;vertical-align:-0.125em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+    .icon>circle,.icon>rect,.icon>ellipse{fill:currentColor;stroke:none}
+  </style>
 
   <style>
     /* ── Admin shell layout ───────────────────────────────────────────────── */

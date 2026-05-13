@@ -146,6 +146,7 @@ const AdminPanel = {
   openModal(title, bodyHTML, saveLabel, onSave) {
     document.getElementById('admin-modal-title').textContent = title;
     document.getElementById('admin-modal-body').innerHTML    = bodyHTML;
+    convertFAIcons(document.getElementById('admin-modal-body'));
     document.getElementById('modal-save-btn').textContent    = saveLabel || 'Save';
     document.getElementById('modal-save-btn').onclick        = onSave;
     document.getElementById('modal-error').textContent       = '';
@@ -208,6 +209,7 @@ const AdminPanel = {
 
     // Show spinner while uploading
     preview.innerHTML = '<span class="upload-spinner"><i class="fas fa-spinner fa-spin"></i></span>';
+    convertFAIcons(preview);
 
     const fd = new FormData();
     fd.append('file', input.files[0]);
@@ -218,6 +220,7 @@ const AdminPanel = {
       preview.innerHTML = `<img id="${previewId}-img" src="${this.esc(r.url)}" alt="preview">`;
     } else {
       preview.innerHTML = '<span class="upload-placeholder"><i class="fas fa-exclamation-triangle"></i></span>';
+      convertFAIcons(preview);
       this._modalError(r.message || 'Upload failed.');
     }
   },
@@ -226,6 +229,7 @@ const AdminPanel = {
     document.getElementById(fieldId).value = '';
     document.getElementById(previewId).innerHTML =
       '<span class="upload-placeholder"><i class="fas fa-user"></i></span>';
+    convertFAIcons(document.getElementById(previewId));
   },
 
 
@@ -379,7 +383,8 @@ const AdminPanel = {
     const idx = container.querySelectorAll('.skill-group-editor').length;
     const wrap = document.createElement('div');
     wrap.innerHTML = this._skillGroupHTML(idx);
-    container.appendChild(wrap.firstElementChild);
+    const el = container.appendChild(wrap.firstElementChild);
+    convertFAIcons(el);
   },
 
   async _saveSkills() {
@@ -911,51 +916,55 @@ const AdminPanel = {
   async _refreshProjects() {
     const projects = await this._get('/admin/api/projects');
     if (!Array.isArray(projects)) return;
-    const grid = document.querySelector('.projects-grid');
+    const grid = document.querySelector('.projects-strips');
     if (!grid) return;
     const isAllPage = window.location.pathname === '/projects';
     const list = isAllPage ? projects : projects.slice(0, 4);
-    grid.innerHTML = list.map((p, i) => this._projectCardHTML(i, p, list.length)).join('');
+    grid.innerHTML = list.map((p, i) => this._projectStripHTML(i, p, list.length)).join('');
+    convertFAIcons(grid);
   },
 
-  _projectCardHTML(idx, p, total) {
+  _projectStripHTML(idx, p, total) {
     const isAdmin = !!document.getElementById('admin-bar');
     const controls = isAdmin ? `
-      <div class="card-admin-controls project-card-controls">
-        <button class="admin-btn admin-btn-small card-move-btn"
-                onclick="AdminPanel.moveProject(${idx}, -1)"
-                title="Move up" ${idx === 0 ? 'disabled' : ''}>
-          <i class="fas fa-chevron-up"></i>
-        </button>
-        <button class="admin-btn admin-btn-small card-move-btn"
-                onclick="AdminPanel.moveProject(${idx}, 1)"
-                title="Move down" ${idx === total - 1 ? 'disabled' : ''}>
-          <i class="fas fa-chevron-down"></i>
-        </button>
-        <button class="admin-btn admin-btn-small"
-                onclick="AdminPanel.openEditProject(${idx})">
-          <i class="fas fa-pencil-alt"></i> Edit
-        </button>
-        <button class="admin-btn admin-btn-small admin-btn-danger"
-                onclick="AdminPanel.deleteProject(${idx})">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>` : '';
+        <div class="card-admin-controls strip-admin-controls">
+          <button class="admin-btn admin-btn-small card-move-btn"
+                  onclick="AdminPanel.moveProject(${idx}, -1)"
+                  title="Move up" ${idx === 0 ? 'disabled' : ''}>
+            <i class="fas fa-chevron-up"></i>
+          </button>
+          <button class="admin-btn admin-btn-small card-move-btn"
+                  onclick="AdminPanel.moveProject(${idx}, 1)"
+                  title="Move down" ${idx === total - 1 ? 'disabled' : ''}>
+            <i class="fas fa-chevron-down"></i>
+          </button>
+          <button class="admin-btn admin-btn-small"
+                  onclick="AdminPanel.openEditProject(${idx})">
+            <i class="fas fa-pencil-alt"></i> Edit
+          </button>
+          <button class="admin-btn admin-btn-small admin-btn-danger"
+                  onclick="AdminPanel.deleteProject(${idx})">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>` : '';
 
     const tags = (p.tags || []).map(t => `<span class="tag">${this.esc(t)}</span>`).join('');
 
-    const imgHTML = p.image
-      ? `<img src="${this.esc(p.image)}" alt="${this.esc(p.title)}" class="cs-header-img">
-         <div class="cs-header-overlay"></div>`
-      : '';
+    const visualHTML = p.image
+      ? `<img src="${this.esc(p.image)}" alt="${this.esc(p.title)}" class="strip-visual-img">`
+      : `<div class="strip-visual-placeholder">
+           <span class="strip-visual-icon"><i class="fas fa-code"></i></span>
+           <span class="strip-visual-label">${this.esc(p.title)}</span>
+         </div>`;
 
     const metricsHTML = (p.metrics || []).length
-      ? `<div class="cs-metrics">${(p.metrics || []).map(m => `
-          <div class="cs-metric">
-            <span class="cs-metric-value">${this.esc(m.value)}</span>
-            <span class="cs-metric-label">${this.esc(m.label)}</span>
-          </div>`).join('')}
-        </div>` : '';
+      ? `<div class="strip-metrics">${(p.metrics || []).map(m => `
+           <div class="strip-metric">
+             <span class="strip-metric-value">${this.esc(m.value)}</span>
+             <span class="strip-metric-label">${this.esc(m.label)}</span>
+           </div>`).join('')}
+         </div>` : '';
+
     const attachmentFiles = (p.attachments || []).filter(att => att && att.url);
     const attachmentsHTML = attachmentFiles.length
       ? `<div class="project-attachments">
@@ -983,38 +992,36 @@ const AdminPanel = {
         </div>` : '';
 
     return `
-      <article class="case-study-card" data-idx="${idx}">
+      <article class="project-strip" data-idx="${idx}">
         ${controls}
-        <div class="cs-header">${imgHTML}
-          <p class="cs-tagline">${this.esc(p.tagline || p.title)}</p>
-        </div>
-        ${metricsHTML}
-        <div class="cs-body">
-          <h3 class="cs-title">${this.esc(p.title)}</h3>
-          <div class="cs-psi">
-            <div class="cs-psi-item">
-              <span class="cs-psi-label cs-psi-problem">Problem</span>
-              <p class="cs-psi-text">${this.esc(p.problem || '')}</p>
+        <div class="project-strip-inner">
+          <div class="strip-visual">${visualHTML}</div>
+          <div class="strip-body">
+            <h3 class="strip-title">${this.esc(p.title)}</h3>
+            <p class="strip-tagline">${this.esc(p.tagline || '')}</p>
+            ${metricsHTML}
+            <div class="cs-psi">
+              <div class="cs-psi-item">
+                <span class="cs-psi-label cs-psi-problem">Problem</span>
+                <p class="cs-psi-text">${this.esc(p.problem || '')}</p>
+              </div>
+              <div class="cs-psi-item">
+                <span class="cs-psi-label cs-psi-solution">Solution</span>
+                <p class="cs-psi-text">${this.esc(p.solution || '')}</p>
+              </div>
+              <div class="cs-psi-item">
+                <span class="cs-psi-label cs-psi-impact">Impact</span>
+                <p class="cs-psi-text">${this.esc(p.impact || '')}</p>
+              </div>
             </div>
-            <div class="cs-psi-item cs-psi-collapsible">
-              <span class="cs-psi-label cs-psi-solution">Solution</span>
-              <p class="cs-psi-text">${this.esc(p.solution || '')}</p>
+            <div class="project-tags">${tags}</div>
+            <div class="project-links">
+              ${p.github && p.github !== '#' ? `<a href="${this.esc(p.github)}" class="project-link" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i> GitHub</a>` : ''}
+              ${attachmentsHTML}
+              ${p.demo_type === 'live' && p.demo && p.demo !== '#'
+                ? `<a href="${this.esc(p.demo)}" class="project-link demo" target="_blank" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i> Live Demo</a>`
+                : `<a href="/#contact" class="project-link ask-demo"><i class="fas fa-envelope"></i> Request Demo</a>`}
             </div>
-            <div class="cs-psi-item cs-psi-collapsible">
-              <span class="cs-psi-label cs-psi-impact">Impact</span>
-              <p class="cs-psi-text">${this.esc(p.impact || '')}</p>
-            </div>
-          </div>
-          <button class="cs-toggle-btn" onclick="toggleCard(this)" aria-expanded="false">
-            <i class="fas fa-chevron-down"></i> Show more
-          </button>
-          <div class="project-tags">${tags}</div>
-          <div class="project-links">
-            ${p.github && p.github !== '#' ? `<a href="${this.esc(p.github)}" class="project-link" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i> GitHub</a>` : ''}
-            ${attachmentsHTML}
-            ${p.demo_type === 'live' && p.demo && p.demo !== '#'
-              ? `<a href="${this.esc(p.demo)}" class="project-link demo" target="_blank" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i> Live Demo</a>`
-              : `<a href="/#contact" class="project-link ask-demo"><i class="fas fa-envelope"></i> Request Demo</a>`}
           </div>
         </div>
       </article>`;
@@ -1084,6 +1091,7 @@ const AdminPanel = {
     const timeline = document.querySelector('.timeline');
     if (timeline) {
       timeline.innerHTML = list.map((job, i) => this._timelineItemHTML(i, job)).join('');
+      convertFAIcons(timeline);
     }
   },
 
@@ -1133,17 +1141,21 @@ const AdminPanel = {
   },
 
   _applyAbout(p) {
-    // Avatar
-    const avatarWrap = document.querySelector('.about-avatar');
-    if (avatarWrap) {
+    // Hero photo (avatar moved to hero section)
+    const heroPhoto = document.querySelector('.hero-photo');
+    if (heroPhoto) {
       if (p.avatar) {
-        avatarWrap.innerHTML = `<img src="${this.esc(p.avatar)}" alt="${this.esc(p.name ?? '')}" class="avatar-photo">`;
+        const img = document.createElement('img');
+        img.src = p.avatar;
+        img.alt = p.name || '';
+        img.className = 'hero-photo';
+        heroPhoto.parentNode.replaceChild(img, heroPhoto);
       } else {
         const initials = (p.name || 'VO').trim().split(' ')
           .filter(Boolean)
           .map((w, _, a) => a.length > 1 ? (a.indexOf(w) === 0 || a.indexOf(w) === a.length - 1 ? w[0] : '') : w.slice(0, 2))
           .join('').toUpperCase().slice(0, 2);
-        avatarWrap.innerHTML = `<div class="avatar-initials" aria-hidden="true">${initials}</div>`;
+        heroPhoto.textContent = initials;
       }
     }
 
@@ -1165,6 +1177,7 @@ const AdminPanel = {
     const isAdmin = !!document.getElementById('admin-bar');
     const skills  = p.skills || [];
     grid.innerHTML = skills.map((g, i) => {
+      const tagCount = (g.tags || []).length;
       const moveControls = isAdmin ? `
         <div class="skill-group-move-controls">
           <button class="admin-btn admin-btn-small card-move-btn"
@@ -1184,12 +1197,14 @@ const AdminPanel = {
           <h3 class="skill-category">
             <i class="fas ${this.esc(g.icon)}" aria-hidden="true"></i>
             ${this.esc(g.category)}
+            <span class="skill-count">${tagCount}</span>
           </h3>
           <div class="skill-tags">
             ${(g.tags || []).map(t => `<span class="skill-tag">${this.esc(t)}</span>`).join('')}
           </div>
         </div>`;
     }).join('');
+    convertFAIcons(grid);
   },
 
   _applyContact(p) {
@@ -1233,15 +1248,15 @@ const AdminPanel = {
 function initSortable() {
   if (typeof Sortable === 'undefined') return;
 
-  // Projects grid — only when admin bar is present
-  const projGrid = document.querySelector('.projects-grid');
+  // Projects strips — only when admin bar is present
+  const projGrid = document.querySelector('.projects-strips');
   if (projGrid && document.getElementById('admin-bar')) {
     Sortable.create(projGrid, {
       animation: 180,
       ghostClass: 'sortable-ghost',
       chosenClass: 'sortable-chosen',
       onEnd: async function () {
-        const cards  = [...projGrid.querySelectorAll('.case-study-card')];
+        const cards  = [...projGrid.querySelectorAll('.project-strip')];
         const order  = cards.map(c => parseInt(c.dataset.idx));
         const r      = await AdminPanel._post('/admin/api/projects/reorder', { order });
         if (r.status === 'ok') await AdminPanel._refreshProjects();
@@ -1281,6 +1296,7 @@ function toggleCard(btn) {
   btn.innerHTML  = expanded
     ? '<i class="fas fa-chevron-up"></i> Show less'
     : '<i class="fas fa-chevron-down"></i> Show more';
+  convertFAIcons(btn);
 }
 
 
