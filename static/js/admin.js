@@ -407,7 +407,18 @@ const AdminPanel = {
 
   _contactForm(p) {
     const c = p.contact || {};
+    const ct = p.content || {};
     return `
+      <p class="form-section-label">Section Headings</p>
+      <div class="form-group">
+        <label>Section title</label>
+        <input type="text" id="m-contact-title" value="${this.esc(ct.contact_title ?? 'Get In Touch')}">
+      </div>
+      <div class="form-group">
+        <label>Subtitle text</label>
+        <input type="text" id="m-contact-subtitle" value="${this.esc(ct.contact_subtitle ?? 'Open to data engineering roles, consulting, and freelance projects.')}">
+      </div>
+      <p class="form-section-label">Contact Details</p>
       <div class="form-group">
         <label>Email</label>
         <input type="email" id="m-contact-email" value="${this.esc(c.email ?? '')}">
@@ -439,6 +450,9 @@ const AdminPanel = {
       github:   document.getElementById('m-contact-github').value.trim(),
       whatsapp: document.getElementById('m-contact-whatsapp').value.trim(),
     };
+    p.content = p.content || {};
+    p.content.contact_title    = document.getElementById('m-contact-title').value.trim();
+    p.content.contact_subtitle = document.getElementById('m-contact-subtitle').value.trim();
 
     const r = await this._post('/admin/api/profile', p);
     if (r.status !== 'ok') { this._modalError(r.message); return; }
@@ -1209,10 +1223,18 @@ const AdminPanel = {
 
   _applyContact(p) {
     const c = p.contact || {};
+    const ct = p.content || {};
     const emailEl = document.querySelector('.contact-email-link');
     if (emailEl) { emailEl.href = `mailto:${c.email ?? ''}`; emailEl.textContent = c.email ?? ''; }
     const locEl = document.querySelector('.contact-location-text');
     if (locEl) locEl.textContent = c.location ?? '';
+    const contactSection = document.getElementById('contact');
+    if (contactSection) {
+      const titleEl = contactSection.querySelector('.section-title');
+      if (titleEl) titleEl.textContent = ct.contact_title ?? 'Get In Touch';
+      const subtitleEl = contactSection.querySelector('.section-subtitle');
+      if (subtitleEl) subtitleEl.textContent = ct.contact_subtitle ?? 'Open to data engineering roles, consulting, and freelance projects.';
+    }
     const setHref = (sel, href) => { const el = document.querySelector(sel); if (el) el.href = href || '#'; };
     setHref('.contact-linkedin-link', c.linkedin);
     setHref('.contact-github-link',   c.github);
